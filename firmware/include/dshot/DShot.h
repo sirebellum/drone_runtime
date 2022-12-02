@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <io/gpio.h>
 
 #ifndef DShot_h
 #define DShot_h
@@ -28,12 +28,13 @@ class DShot{
       DSHOT150
     };
     DShot(const enum Mode mode);
-    void attach(uint8_t pin);
-    uint16_t setThrottle(uint16_t throttle);
+    void attach(uint8_t* pins);
+    void sendData();
+    void setThrottles(uint16_t* throttles);
   private:
-    uint16_t _packet = 0;
-    uint16_t _throttle = 0;
-    uint8_t _pinMask = 0;
+    uint16_t _packets[4] = {0};
+    uint16_t _throttles[4] = {0};
+    GPIO _gpios[4];
 };
 
 #endif
