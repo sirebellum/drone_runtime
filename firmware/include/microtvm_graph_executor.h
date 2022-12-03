@@ -22,6 +22,7 @@
 
 #include <dlpack/dlpack.h>
 
+#include <dlfcn.h>
 #include <algorithm>
 #include <functional>
 #include <memory>

@@ -25,4 +25,5 @@ with tvm.transform.PassContext(opt_level=3):
     mod = relay.build(mod, target=target)
     with open("firmware/model.json", "w") as json:
         json.write(mod.get_graph_json())
-    mod.export_library("firmware/model.so", options=["-fuse-ld=lld", "--target=aarch64-linux-gnueabihf"])
+    mod.export_library("firmware/model.so", options=["-fuse-ld=lld",
+                                                     "--target=aarch64-linux-gnueabihf"])
