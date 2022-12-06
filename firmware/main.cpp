@@ -6,6 +6,7 @@
 #include <io/i2c.h>
 #include <sensors/mpu.h>
 #include <sensors/gps.h>
+#include <sensors/ultra.h>
 
 #include <sstream>
 #include <fstream>
@@ -94,6 +95,11 @@ int main(int argc, char** argv) {
     MPU mpu = MPU(&i2c, in_data);
     std::thread mpu_thread(&MPU::run, &mpu);
 
+    // Set up ultrasonic
+    printf("Init ultrasonic\n");
+    ULTRA ultra = ULTRA(&i2c, in_data);
+    std::thread ultra_thread(&ULTRA::run, &ultra);
+
     // Runtime loop
     printf("Running...\n");
     #if DEBUG
@@ -132,6 +138,7 @@ int main(int argc, char** argv) {
         }
         counter += 1;
         printf("%.3f %.3f %.3f %.3f\n", out_data[0],out_data[1],out_data[2],out_data[3]);
+        printf("x %.3f   y %.3f   z %.3f\n", in_data[0], in_data[1], in_data[2]);
         printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
         printf("x_gyro %.3f   y_gyro %.3f   z_gyro %.3f\n", in_data[0], in_data[1], in_data[2]);
         printf("x_accel %.3f  y_accel %.3f   z_accel %.3f\n", in_data[3], in_data[4], in_data[5]);
@@ -140,6 +147,8 @@ int main(int argc, char** argv) {
 
     gps.running = false;
     mpu.running = false;
+    ultra.running = false;
+    ultra_thread.join();
     mpu_thread.join();
     gps_thread.join();
 }
