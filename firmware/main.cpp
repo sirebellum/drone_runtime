@@ -85,7 +85,6 @@ int main(int argc, char** argv) {
 
     // Set up GPS
     printf("Init GPS\n");
-    // const char deviceName[] = {'/','d','e','v','/','t','t','y','A','C','M','0','\0'};
     GPS gps = GPS();
     std::thread gps_thread(&GPS::run, &gps);
     printf("Home: %.3f %.3f\n", gps.home.latitude, gps.home.longitude);

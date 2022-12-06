@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <sensors/ultra.h>
 
-#define HOVER_HEIGHT 150 // cm
+#define HOVER_HEIGHT 300 // cm
 
 ULTRA::ULTRA(I2c* i2c_interface, float* buffer)
 {
@@ -31,6 +31,10 @@ void ULTRA::run()
         this->i2c->writeByte(DEFAULT_ULTRA_W_ADRESS, 81);
         this->i2c->locked = false;
         usleep(80000);
+
+        // Wait for lock on i2c
+        while (this->i2c->locked)
+            continue;
         this->i2c->locked = true;
 
         // Read
@@ -38,5 +42,6 @@ void ULTRA::run()
         this->upper_byte = this->i2c->readByte(DEFAULT_ULTRA_R_ADRESS);
         this->lower_byte = this->i2c->readByte(DEFAULT_ULTRA_R_ADRESS);
         this->buffer[2] = this->merge_bytes(this->lower_byte, this->upper_byte)/HOVER_HEIGHT;
+        this->i2c->locked = false;
     }
 }

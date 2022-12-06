@@ -81,7 +81,7 @@ void MPU::run()
             this->i2c->writeByte(REG_USER_CTRL, 0x44);
         }
 
-        if (this->fifo_len >= 8) {
+        if (this->fifo_len >= 12) {
             this->gyro_x_h = this->i2c->readByte(REG_FIFO);
             this->gyro_x_l = this->i2c->readByte(REG_FIFO);
             this->gyro_y_h = this->i2c->readByte(REG_FIFO);
@@ -109,11 +109,11 @@ void MPU::run()
             this->buffer[8] = ((float) this->z_accel)/16384;
 
             this->i2c->locked = false;
-            usleep(1000);
+            usleep(10000);
     	}
     	else {
             this->i2c->locked = false;
-        usleep(10000);
+            usleep(10000);
     	}
     }
 }
