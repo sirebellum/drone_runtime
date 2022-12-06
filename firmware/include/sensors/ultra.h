@@ -4,16 +4,14 @@
 #include <iostream>
 #include <io/i2c.h>
 
-#define DEFAULT_ULTRA_W_ADRESS 0xE0
-#define DEFAULT_ULTRA_R_ADRESS 0xE1
+#define DEFAULT_ULTRA_ADRESS 0x70
 
 class ULTRA {
 	public:
 		ULTRA(I2c* i2c_interface, float* buffer);
 		~ULTRA();
 		I2c* i2c;
-		int w_address = DEFAULT_ULTRA_W_ADRESS;
-		int r_address = DEFAULT_ULTRA_R_ADRESS;
+		int address = DEFAULT_ULTRA_ADRESS;
 		void run();
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
 		float* buffer;
