@@ -5,6 +5,7 @@
 #include <dshot/DShot.h>
 #include <io/i2c.h>
 #include <sensors/mpu.h>
+#include <sensors/gps.h>
 
 #include <sstream>
 #include <fstream>
@@ -29,8 +30,8 @@ int main(int argc, char** argv) {
     tvm::micro::MicroGraphExecutor* exec = new tvm::micro::MicroGraphExecutor(json.str(), mod);
 
     // Set up input buffers
-    float in_data[12] = {-1}; // X Y Z R P Y Vx Vy Vz Wx Wy Wz
-    int64_t in_dim[] = {1,12};
+    float in_data[9] = {-1}; // X Y Z R P Y Ax Ay Az
+    int64_t in_dim[] = {1,9};
     _Float16 out_data[4] = {-1};
     int64_t out_dim[] = {1,4};
     int64_t stride[] = {1,1};
@@ -77,12 +78,21 @@ int main(int argc, char** argv) {
     uint16_t throttles[4] = {0};
 
     // Set up i2c
+    printf("Init I2c\n");
     const char deviceName[] = {'/','d','e','v','/','i','2','c','-','1','\0'};
     I2c i2c = I2c(deviceName);
 
+    // Set up GPS
+    printf("Init GPS\n");
+    // const char deviceName[] = {'/','d','e','v','/','t','t','y','A','C','M','0','\0'};
+    GPS gps = GPS();
+    std::thread gps_thread(&GPS::run, &gps);
+    printf("Home: %.3f %.3f\n", gps.home.latitude, gps.home.longitude);
+
     // Set up acceleromter
-    MPU mpu = MPU(&i2c);
-    std::thread mpu_thread(&MPU::run, mpu);
+    printf("Init acceleromter\n");
+    MPU mpu = MPU(&i2c, in_data);
+    std::thread mpu_thread(&MPU::run, &mpu);
 
     // Runtime loop
     printf("Running...\n");
@@ -99,26 +109,12 @@ int main(int argc, char** argv) {
             start = std::chrono::high_resolution_clock::now();
         #endif
 
-        // Get new acceleromter data
-        while (mpu.locked)
-            continue;
-        mpu.locked = true;
-        printf("x_gyro %.3fg   y_gyro %.3fg   z_gyro %.3fg\r", mpu.x_gyro_g, mpu.y_gyro_g, mpu.z_gyro_g);
-        printf("x_accel %.3fg   y_accel %.3fg   z_accel %.3fg\r", mpu.x_accel_g, mpu.y_accel_g, mpu.z_accel_g);
-        mpu.locked = false;
-
-        // TODO Synthesize sensor data into input vector
-        // X Y Z R P Y Vx Vy Vz Wx Wy Wz
-
         // Run model
         exec->SetInput(0, &in);
         exec->Run();
         exec->CopyOutputTo(0, &out);
 
         // Set motor throttles
-        // #if DEBUG
-        // printf("%f, %f, %f %f\r", out_data[0],out_data[1],out_data[2],out_data[3]);
-        // #endif
         throttles[0] = out_data[0]*2048;
         throttles[1] = out_data[1]*2048;
         throttles[2] = out_data[2]*2048;
@@ -126,16 +122,24 @@ int main(int argc, char** argv) {
         dshot.setThrottles(throttles);
         dshot.sendData();
 
+        // Update position
+
         #if DEBUG
         if (counter%10000) {
             stop = std::chrono::high_resolution_clock::now();
             duration = duration_cast<std::chrono::microseconds>(stop - start);
-            cout << duration.count() << "us\r";
+            cout << duration.count() << "us\n";
         }
         counter += 1;
+        printf("%.3f %.3f %.3f %.3f\n", out_data[0],out_data[1],out_data[2],out_data[3]);
+        printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
+        printf("x_gyro %.3f   y_gyro %.3f   z_gyro %.3f\n", in_data[0], in_data[1], in_data[2]);
+        printf("x_accel %.3f  y_accel %.3f   z_accel %.3f\n", in_data[3], in_data[4], in_data[5]);
         #endif
     }
 
+    gps.running = false;
     mpu.running = false;
     mpu_thread.join();
+    gps_thread.join();
 }

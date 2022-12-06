@@ -8,17 +8,15 @@
 
 class MPU {
 	public:
-		MPU(I2c* i2c_interface);
+		MPU(I2c* i2c_interface, float* buffer);
 		~MPU();
 		I2c* i2c;
 		int address = DEFAULT_MPU_ADRESS;
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
 		int16_t two_complement_to_int( uint8_t LSB, uint8_t MSB);
 		void run();
-		float x_accel_g, y_accel_g, z_accel_g;
-		float x_gyro_g, y_gyro_g, z_gyro_g;
+		float* buffer;
 		bool running;
-		bool locked;
 
 	private:
 		char accel_x_h,accel_x_l,accel_y_h,accel_y_l,accel_z_h,accel_z_l;

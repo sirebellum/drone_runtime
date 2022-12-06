@@ -15,8 +15,10 @@
 #define REG_FIFO 0x74
 #define REG_WHO_AM_I 0x75
 
-MPU::MPU(I2c* i2c_interface)
+MPU::MPU(I2c* i2c_interface, float* buffer)
 {
+    this->buffer = buffer;
+
     this->i2c = i2c_interface;
     this->i2c->addressSet(this->address);
 
@@ -64,66 +66,54 @@ uint16_t MPU::merge_bytes( uint8_t LSB, uint8_t MSB) {
 void MPU::run()
 {
     while (this->running) {
-        if (this->locked)
+        // Wait for lock on i2c
+        while (this->i2c->locked)
             continue;
-    	this->locked = true;
+        this->i2c->locked = true;
+        this->i2c->addressSet(this->address);
 
-    	// Wait for lock on i2c
-    	while (this->i2c->locked)
-            continue;
-    	this->i2c->locked = true;
-    	this->i2c->addressSet(this->address);
+        this->accel_x_h = this->i2c->readByte(REG_FIFO_COUNT_L);
+        this->accel_x_l = this->i2c->readByte(REG_FIFO_COUNT_H);
+        this->fifo_len = merge_bytes(this->accel_x_h,this->accel_x_l);
 
-	this->accel_x_h = this->i2c->readByte(REG_FIFO_COUNT_L);
-	this->accel_x_l = this->i2c->readByte(REG_FIFO_COUNT_H);
-	this->fifo_len = merge_bytes(this->accel_x_h,this->accel_x_l);
+        if (this->fifo_len >= 1024) {
+            // printf("fifo overflow !\n");
+            this->i2c->writeByte(REG_USER_CTRL, 0x44);
+        }
 
-	if (this->fifo_len >= 1024) {
-	    printf("fifo overflow !\n");
-	    this->i2c->writeByte(REG_USER_CTRL, 0x44);
-	}
+        if (this->fifo_len >= 8) {
+            this->gyro_x_h = this->i2c->readByte(REG_FIFO);
+            this->gyro_x_l = this->i2c->readByte(REG_FIFO);
+            this->gyro_y_h = this->i2c->readByte(REG_FIFO);
+            this->gyro_y_l = this->i2c->readByte(REG_FIFO);
+            this->gyro_z_h = this->i2c->readByte(REG_FIFO);
+            this->gyro_z_l = this->i2c->readByte(REG_FIFO);
 
-	if (this->fifo_len >= 8) {
-	    this->gyro_x_h = this->i2c->readByte(REG_FIFO);
-	    this->gyro_x_l = this->i2c->readByte(REG_FIFO);
-	    this->gyro_y_h = this->i2c->readByte(REG_FIFO);
-	    this->gyro_y_l = this->i2c->readByte(REG_FIFO);
-	    this->gyro_z_h = this->i2c->readByte(REG_FIFO);
-	    this->gyro_z_l = this->i2c->readByte(REG_FIFO);
+            this->accel_x_h = this->i2c->readByte(REG_FIFO);
+            this->accel_x_l = this->i2c->readByte(REG_FIFO);
+            this->accel_y_h = this->i2c->readByte(REG_FIFO);
+            this->accel_y_l = this->i2c->readByte(REG_FIFO);
+            this->accel_z_h = this->i2c->readByte(REG_FIFO);
+            this->accel_z_l = this->i2c->readByte(REG_FIFO);
 
-	    this->accel_x_h = this->i2c->readByte(REG_FIFO);
-	    this->accel_x_l = this->i2c->readByte(REG_FIFO);
-	    this->accel_y_h = this->i2c->readByte(REG_FIFO);
-	    this->accel_y_l = this->i2c->readByte(REG_FIFO);
-	    this->accel_z_h = this->i2c->readByte(REG_FIFO);
-	    this->accel_z_l = this->i2c->readByte(REG_FIFO);
+            this->buffer[0]= two_complement_to_int(this->gyro_x_h,this->gyro_x_l);
+            this->buffer[1]= two_complement_to_int(this->gyro_y_h,this->gyro_y_l);
+            this->buffer[2]= two_complement_to_int(this->gyro_z_h,this->gyro_z_l);
 
-	    this->x_gyro= two_complement_to_int(this->gyro_x_h,this->gyro_x_l);
-	    this->x_gyro_g = ((float) this->x_gyro)/16384;
+            this->x_accel= two_complement_to_int(this->accel_x_h,this->accel_x_l);
+            this->y_accel= two_complement_to_int(this->accel_y_h,this->accel_y_l);
+            this->z_accel= two_complement_to_int(this->accel_z_h,this->accel_z_l);
 
-	    this->y_gyro= two_complement_to_int(this->gyro_y_h,this->gyro_y_l);
-	    this->y_gyro_g = ((float) this->y_gyro)/16384;
+            this->buffer[3] = ((float) this->x_accel)/16384;
+            this->buffer[4] = ((float) this->y_accel)/16384;
+            this->buffer[5] = ((float) this->z_accel)/16384;
 
-	    this->z_gyro= two_complement_to_int(this->gyro_z_h,this->gyro_z_l);
-	    this->z_gyro_g = ((float) this->z_gyro)/16384;
-
-	    this->x_accel= two_complement_to_int(this->accel_x_h,this->accel_x_l);
-	    this->x_accel_g = ((float) this->x_accel)/16384;
-
-	    this->y_accel= two_complement_to_int(this->accel_y_h,this->accel_y_l);
-	    this->y_accel_g = ((float) this->y_accel)/16384;
-
-	    this->z_accel= two_complement_to_int(this->accel_z_h,this->accel_z_l);
-	    this->z_accel_g = ((float) this->z_accel)/16384;
-
-    	    this->i2c->locked = false;
-    	    this->locked = false;
-	    usleep(100);
-	}
-	else {
-    	    this->i2c->locked = false;
-    	    this->locked = false;
-	    usleep(10000);
-	}
+            this->i2c->locked = false;
+            usleep(1000);
+    	}
+    	else {
+            this->i2c->locked = false;
+        usleep(10000);
+    	}
     }
 }
