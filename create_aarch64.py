@@ -15,7 +15,7 @@ target = tvm.target.arm_cpu(options=["-mattr=+neon",
                                      "-mtriple=aarch64-linux-gnueabihf"])
 
 input_name = "input"
-shape_dict = {input_name: (1, 12+3+1)}
+shape_dict = {input_name: (1, 12)}
 print("ONNX to relay")
 mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
 mod = ToMixedPrecision("float16")(mod)

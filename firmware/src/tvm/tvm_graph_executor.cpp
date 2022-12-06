@@ -197,9 +197,9 @@ DSOModule::DSOModule(const std::string& name) {
   }
   // Initialize the functions
   TVM_INIT_CONTEXT_FUNC(TVMAPISetLastError);
-  TVM_INIT_CONTEXT_FUNC(TVMBackendAllocWorkspace);
-  TVM_INIT_CONTEXT_FUNC(TVMBackendFreeWorkspace);
-  TVM_INIT_CONTEXT_FUNC(TVMBackendParallelLaunch);
+  // TVM_INIT_CONTEXT_FUNC(TVMBackendAllocWorkspace);
+  // TVM_INIT_CONTEXT_FUNC(TVMBackendFreeWorkspace);
+  // TVM_INIT_CONTEXT_FUNC(TVMBackendParallelLaunch);
 // TODO(tulloch): implement these functions?
 // TVM_INIT_CONTEXT_FUNC(TVMFuncCall);
 // TVM_INIT_CONTEXT_FUNC(TVMBackendGetFuncFromEnv);
@@ -265,12 +265,20 @@ void MicroGraphExecutor::SetupStorage() {
   // Grab saved optimization plan from graph.
   DynArray<DLDataType> vtype(attrs_.dltype.size());
   for (size_t i = 0; i < attrs_.dltype.size(); ++i) {
-    assert(attrs_.dltype[i] == "float32");
     DLDataType ty;
-    ty.bits = 32;
-    ty.lanes = 1;
-    ty.code = kDLFloat;
-    vtype[i] = ty;
+    if (attrs_.dltype[i] == "float32") {
+      ty.bits = 32;
+      ty.lanes = 1;
+      ty.code = kDLFloat;
+      vtype[i] = ty;
+    }
+    else if (attrs_.dltype[i] == "float16") {
+      ty.bits = 16;
+      ty.lanes = 1;
+      ty.code = kDLFloat;
+      vtype[i] = ty;
+    }
+
   }
 
   // Size and device type of each storage pool entry.

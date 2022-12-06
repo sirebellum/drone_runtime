@@ -9,6 +9,8 @@
 #include <linux/types.h>
 #include <iostream>
 
+#define I2C_DEFAULT_READ_TIMEOUT     1000
+
 class I2c {
 	public:
 		I2c(const char * deviceName);
@@ -25,6 +27,8 @@ class I2c {
 			addressSet(address);
 			return tryReadByte(command);
 		}
+		uint16_t readTimeout = I2C_DEFAULT_READ_TIMEOUT;
+		bool locked = false;
 	private:
 		int fd;
 };

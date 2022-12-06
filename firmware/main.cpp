@@ -4,50 +4,66 @@
 #include <dlpack/dlpack.h>
 #include <dshot/DShot.h>
 #include <io/i2c.h>
+#include <sensors/mpu.h>
+
+#include <sstream>
+#include <fstream>
+#include <chrono>
+#include <thread>
+
+#define DEBUG true
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
 int main(int argc, char** argv) {
 
     // Set up tvm runtime
-    printf("Init flight model\n");
-    const char so[8] = {'m','o','d','e','l','.','s','o'};
-    const size_t so_len = 8;
-    tvm::micro::DSOModule* mod = new tvm::micro::DSOModule(std::string(so, so + so_len));
+    const char so[] = {'.','/','m','o','d','e','l','.','s','o','\0'};
+    printf("Init %s\n", so);
+    tvm::micro::DSOModule* mod = new tvm::micro::DSOModule(so);
 
-    const char json[10] = {'m','o','d','e','l','.','j','s','o','n'};
-    const size_t json_len = 10;
-    tvm::micro::MicroGraphExecutor* exec = new tvm::micro::MicroGraphExecutor(std::string(json, json + json_len), mod);
+    std::ifstream t("model.json");
+    std::stringstream json;
+    json << t.rdbuf();
+    printf("Init graph exec\n");
+    tvm::micro::MicroGraphExecutor* exec = new tvm::micro::MicroGraphExecutor(json.str(), mod);
 
     // Set up input buffers
-    float in_data[16] = {0};
-    int64_t in_dim[2] = {1,16};
-    float out_data[4] = {-1};
-    int64_t out_dim[2] = {1,4};
-    int64_t stride[2] = {1,1};
+    float in_data[12] = {-1}; // X Y Z R P Y Vx Vy Vz Wx Wy Wz
+    int64_t in_dim[] = {1,12};
+    _Float16 out_data[4] = {-1};
+    int64_t out_dim[] = {1,4};
+    int64_t stride[] = {1,1};
     DLDevice device = {
         kDLCPU,
         0
     };
-    DLDataType dtype = {
+    DLDataType f32_t = {
         kDLFloat,
         32,
         0
     };
+    DLDataType f16_t = {
+        kDLFloat,
+        16,
+        0
+    };
+    printf("Init in buffer\n");
     DLTensor in = {
         in_data,
         device,
         2,
-        dtype,
+        f32_t,
         in_dim,
         stride,
         0
     };
+    printf("Init out buffer\n");
     DLTensor out = {
         out_data,
         device,
         2,
-        dtype,
+        f16_t,
         out_dim,
         stride,
         0
@@ -55,23 +71,44 @@ int main(int argc, char** argv) {
 
     // Set up throttle control
     printf("Init dshot\n");
-    DShot dshot = DShot(DShot::DSHOT600);
-    uint8_t motor_pins[4] = {4,16,27,22};
+    DShot dshot = DShot();
+    uint8_t motor_pins[] = {4,17,27,22};
     dshot.attach(motor_pins);
     uint16_t throttles[4] = {0};
 
     // Set up i2c
-    const char deviceName[5] = {'i','2','c','-','0'};
-    I2c acc = I2c(deviceName);
-    uint8_t acc_addr = 1;
+    const char deviceName[] = {'/','d','e','v','/','i','2','c','-','1','\0'};
+    I2c i2c = I2c(deviceName);
 
+    // Set up acceleromter
+    MPU mpu = MPU(&i2c);
+    std::thread mpu_thread(&MPU::run, mpu);
+
+    // Runtime loop
     printf("Running...\n");
+    #if DEBUG
+    auto start = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+    uint counter = 0;
+    #endif
     while (true) {
 
+        #if DEBUG
+        if (counter%10000)
+            start = std::chrono::high_resolution_clock::now();
+        #endif
+
         // Get new acceleromter data
-        acc.addressSet(acc_addr);
-        auto acc_result = acc.readByte(acc_addr);
-        printf("%d", acc_result);
+        while (mpu.locked)
+            continue;
+        mpu.locked = true;
+        printf("x_gyro %.3fg   y_gyro %.3fg   z_gyro %.3fg\r", mpu.x_gyro_g, mpu.y_gyro_g, mpu.z_gyro_g);
+        printf("x_accel %.3fg   y_accel %.3fg   z_accel %.3fg\r", mpu.x_accel_g, mpu.y_accel_g, mpu.z_accel_g);
+        mpu.locked = false;
+
+        // TODO Synthesize sensor data into input vector
+        // X Y Z R P Y Vx Vy Vz Wx Wy Wz
 
         // Run model
         exec->SetInput(0, &in);
@@ -79,12 +116,26 @@ int main(int argc, char** argv) {
         exec->CopyOutputTo(0, &out);
 
         // Set motor throttles
-        // printf("%f, %f, %f %f\n", out_data[0],out_data[1],out_data[2],out_data[3]);
-        throttles[0] = (out_data[0]+1)*1024;
-        throttles[1] = (out_data[1]+1)*1024;
-        throttles[2] = (out_data[2]+1)*1024;
-        throttles[3] = (out_data[3]+1)*1024;
+        // #if DEBUG
+        // printf("%f, %f, %f %f\r", out_data[0],out_data[1],out_data[2],out_data[3]);
+        // #endif
+        throttles[0] = out_data[0]*2048;
+        throttles[1] = out_data[1]*2048;
+        throttles[2] = out_data[2]*2048;
+        throttles[3] = out_data[3]*2048;
         dshot.setThrottles(throttles);
         dshot.sendData();
+
+        #if DEBUG
+        if (counter%10000) {
+            stop = std::chrono::high_resolution_clock::now();
+            duration = duration_cast<std::chrono::microseconds>(stop - start);
+            cout << duration.count() << "us\r";
+        }
+        counter += 1;
+        #endif
     }
+
+    mpu.running = false;
+    mpu_thread.join();
 }
