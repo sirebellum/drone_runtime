@@ -20,7 +20,9 @@ MPU::MPU(I2c* i2c_interface, float* buffer)
     this->buffer = buffer;
 
     this->i2c = i2c_interface;
-    this->i2c->addressSet(this->address);
+
+    if (this->i2c->addressSet(this->address) == -1)
+        printf("Unable to open mpu sensor i2c address...\n");
 
     // Power supply register
     this->i2c->writeByte(REG_PWR_MGMT_1, 0x01);
@@ -70,7 +72,12 @@ void MPU::run()
         while (this->i2c->locked)
             continue;
         this->i2c->locked = true;
-        this->i2c->addressSet(this->address);
+
+        if (this->i2c->addressSet(this->address) == -1) {
+            printf("Unable to open mpu sensor i2c address...\n");
+            usleep(1000);
+            continue;
+        }
 
         this->accel_x_h = this->i2c->readByte(REG_FIFO_COUNT_L);
         this->accel_x_l = this->i2c->readByte(REG_FIFO_COUNT_H);
@@ -109,11 +116,11 @@ void MPU::run()
             this->buffer[8] = ((float) this->z_accel)/16384;
 
             this->i2c->locked = false;
-            usleep(10000);
+            usleep(1000);
     	}
     	else {
             this->i2c->locked = false;
-            usleep(10000);
+            usleep(1000);
     	}
     }
 }

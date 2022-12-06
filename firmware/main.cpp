@@ -13,7 +13,7 @@
 #include <chrono>
 #include <thread>
 
-#define DEBUG true
+#define DEBUG false
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
@@ -137,10 +137,10 @@ int main(int argc, char** argv) {
         }
         counter += 1;
         printf("%.3f %.3f %.3f %.3f\n", out_data[0],out_data[1],out_data[2],out_data[3]);
-        printf("x %.3f   y %.3f   z %.3f\n", in_data[0], in_data[1], in_data[2]);
-        printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
-        printf("x_gyro %.3f   y_gyro %.3f   z_gyro %.3f\n", in_data[0], in_data[1], in_data[2]);
-        printf("x_accel %.3f  y_accel %.3f   z_accel %.3f\n", in_data[3], in_data[4], in_data[5]);
+        printf("x %.3f  y %.3f   z %.3f\n", in_data[0], in_data[1], in_data[2]);
+        printf("R %.3f  P %.3f   Y %.3f\n", in_data[3], in_data[4], in_data[5]);
+        printf("Ax %.3f Ay %.3f  Az %.3f\n", in_data[6], in_data[7], in_data[7]);
+        // printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
         #endif
     }
 

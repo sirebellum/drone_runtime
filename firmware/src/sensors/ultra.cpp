@@ -8,6 +8,10 @@ ULTRA::ULTRA(I2c* i2c_interface, float* buffer)
 {
     this->buffer = buffer;
     this->i2c = i2c_interface;
+
+    if (this->i2c->addressSet(DEFAULT_ULTRA_W_ADRESS) == -1)
+        printf("Unable to open ultrasonic sensor i2c address...\n");
+
     this->running = true;
 }
 
@@ -25,7 +29,12 @@ void ULTRA::run()
         while (this->i2c->locked)
             continue;
         this->i2c->locked = true;
-        this->i2c->addressSet(DEFAULT_ULTRA_W_ADRESS);
+        if (this->i2c->addressSet(DEFAULT_ULTRA_W_ADRESS) == -1) {
+            printf("Unable to open ultrasonic sensor i2c address...\n");
+            usleep(1000);
+            continue;
+        }
+
 
         // Initiate reading
         this->i2c->writeByte(DEFAULT_ULTRA_W_ADRESS, 81);
