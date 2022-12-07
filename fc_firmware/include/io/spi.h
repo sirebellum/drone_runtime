@@ -19,9 +19,9 @@ public:
   ~SPI();
   int fd;
   void packetReadWrite();
-  void packetReadWrite(SPI_PACKET* packet);
-  uint32_t shipmentReceive(unsigned char* buffer);
+  void packetReadWrite(SPI_PACKET *packet);
+  uint32_t shipmentReceive(unsigned char *buffer);
 
 private:
-  unsigned char* packet;
+  unsigned char *packet;
 };

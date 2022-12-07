@@ -11,7 +11,7 @@
 #define OUTPUT_Z_MSB_R 0x07
 #define OUTPUT_Z_LSB_R 0x08
 
-COMPASS::COMPASS(I2c* i2c_interface) {
+COMPASS::COMPASS(I2c *i2c_interface) {
   this->i2c = i2c_interface;
 
   if (this->i2c->addressSet(this->address) == -1)

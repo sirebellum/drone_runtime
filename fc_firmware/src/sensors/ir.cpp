@@ -4,7 +4,7 @@
 /*!
  *    @brief  Instantiates a new MLX90640 class
  */
-IR::IR(I2c* i2c_interface) {
+IR::IR(I2c *i2c_interface) {
   this->i2c = i2c_interface;
   this->begin();
 }
@@ -33,9 +33,8 @@ bool IR::begin() {
   return true;
 }
 
-
 int IR::MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress,
-                      uint16_t data) {
+                          uint16_t data) {
   uint8_t cmd;
   cmd = writeAddress & 0x00FF;
   // Serial.printf("Reading %d words\n", toRead16);
@@ -54,14 +53,12 @@ int IR::MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress,
  *    @param  data Location to place data read
  *    @return 0 on success
  */
-int IR::MLX90640_I2CRead(uint8_t slaveAddr,
-                        uint16_t startAddress,
-                        uint16_t nMemAddressRead,
-                        uint16_t *data) {
+int IR::MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress,
+                         uint16_t nMemAddressRead, uint16_t *data) {
   uint8_t cmd;
   cmd = startAddress & 0x00FF;
   // Serial.printf("Reading %d words\n", toRead16);
-  if (!i2c->readBlock(cmd, nMemAddressRead, (unsigned char*)data))
+  if (!i2c->readBlock(cmd, nMemAddressRead, (unsigned char *)data))
     return -1;
 
   // we now have to swap every two bytes
@@ -128,13 +125,13 @@ void IR::setRefreshRate(mlx90640_refreshrate_t rate) {
 
 float IR::getPixel(int idx) {
   if (idx < 0)
-    return this->pixels[MLX90640_IMG_X*MLX90640_IMG_Y+idx];
+    return this->pixels[MLX90640_IMG_X * MLX90640_IMG_Y + idx];
   else
     return this->pixels[idx];
 }
 
-void IR::getImage(float* buffer) {
-  wmemcpy((wchar_t*)buffer, (wchar_t*)this->pixels, this->resX*this->resY);
+void IR::getImage(float *buffer) {
+  wmemcpy((wchar_t *)buffer, (wchar_t *)this->pixels, this->resX * this->resY);
 }
 
 /*!
@@ -172,7 +169,7 @@ void IR::run() {
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
-      this->i2c->locked=false;
+      this->i2c->locked = false;
       printf("Unable to open ir sensor i2c address...\n");
       usleep(1000);
       continue;
@@ -180,7 +177,7 @@ void IR::run() {
 
     this->getFrame();
 
-    this->i2c->locked=false;
+    this->i2c->locked = false;
     usleep(1000);
   }
 }

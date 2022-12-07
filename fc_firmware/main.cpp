@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <string>
 
-#include <dshot/DShot.h>
-#include <io/i2c.h>
-#include <nav.h>
-#include <sensors/mpu.h>
-#include <sensors/ir.h>
-#include <findp.h>
-#include <microtvm_graph_executor.h>
 #include <dlpack/dlpack.h>
+#include <dshot/DShot.h>
+#include <findp.h>
+#include <io/i2c.h>
+#include <microtvm_graph_executor.h>
+#include <nav.h>
+#include <sensors/ir.h>
+#include <sensors/mpu.h>
 
 #include <chrono>
 #include <fstream>

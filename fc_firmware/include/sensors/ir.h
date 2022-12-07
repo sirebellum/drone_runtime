@@ -17,8 +17,8 @@
 #ifndef _ADAFRUIT_MLX90640_H
 #define _ADAFRUIT_MLX90640_H
 
-#include "sensors/ir_api.h"
 #include "io/i2c.h"
+#include "sensors/ir_api.h"
 
 #define MLX90640_I2CADDR_DEFAULT 0x33 ///< I2C address by default
 
@@ -61,9 +61,9 @@ typedef enum mlx90640_refreshrate {
  */
 class IR {
 public:
-  IR(I2c* i2c);
+  IR(I2c *i2c);
   bool begin();
-  I2c* i2c;
+  I2c *i2c;
   void run();
   int address = MLX90640_I2CADDR_DEFAULT;
   mlx90640_mode_t getMode(void);
@@ -77,13 +77,12 @@ public:
   bool running;
   uint16_t serialNumber[3]; ///< Unique serial number read from device
   float getPixel(int index);
-  void getImage(float* buffer);
+  void getImage(float *buffer);
   int resX = MLX90640_IMG_X;
   int resY = MLX90640_IMG_Y;
-  float pixels[MLX90640_IMG_X*MLX90640_IMG_Y] = {-1};
+  float pixels[MLX90640_IMG_X * MLX90640_IMG_Y] = {-1};
 
 private:
-
   int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress,
                        uint16_t nMemAddressRead, uint16_t *data);
   int MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress,
