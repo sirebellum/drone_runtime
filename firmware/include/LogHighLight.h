@@ -1,7 +1,7 @@
 #ifndef LOGH_UTIL
 #define LOGH_UTIL
 
-#include <ostream>
+#include <iostream>
 
 namespace LogHighLight {
 enum Color {
