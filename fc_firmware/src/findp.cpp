@@ -1,11 +1,12 @@
-#include <fcntl.h>
-#include <math.h>
-#include <findp.h>
 #include <unistd.h>
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+
+#include <findp.h>
 
 #define IMAGE_CAM_X 640
 #define IMAGE_X 640
@@ -23,40 +24,49 @@ FINDP::FINDP(SPI* spi) {
 
 FINDP::~FINDP() {}
 
+void FINDP::archiveImage(cv::Mat* img) {
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+
+  std::ostringstream oss;
+  oss << "./images/" << std::put_time(&tm, "%d-%m-%Y_%H-%M-%S") << ".jpg";
+  auto img_str = oss.str();
+
+  cv::imwrite(img_str, *img);
+}
+
 void FINDP::run() {
 
   // Set up vars
   uint32_t image_size;
   unsigned char* image;
-
+  cv::Mat image_mat;
+  
   // People detection
-  vector<Point> track;
-  vector<Rect> found;
-  vector<double> weights;
+  std::vector<cv::Point> track;
+  std::vector<cv::Rect> found;
+  std::vector<double> weights;
 
   while (this->running) {
 
-    // Request picture and allocate for it
-    image_size = this->spi->shipmentRequestPic();
-    image = new unsigned char(image_size);
-    usleep(100);
-
     // Receive picture
-    this->spi->shipmentReceive(image);
+    image_size = this->spi->shipmentReceive(image);
 
-    // Process image into buffer of float pixels TODO
-    // Depends on transmitted image format
-    cv::Mat image_mat = cv::imdecode(image)
+    // Decode image
+    image_mat = cv::imdecode((cv::InputArray)image, cv::IMREAD_GRAYSCALE);
 
     // Run model
-    this->hog.detectMultiScale(image, found, weights);
+    this->hog.detectMultiScale(image_mat, found, weights);
 
     // Check for detections
     for( size_t i = 0; i < found.size(); i++ ) {
-      if (weights[i] >= 0.5)
-        this->detected = true
+      if (weights[i] >= 0.5) {
+        this->detected = true;
+        printf("Detected!\n");
+      }
     }
 
+    this->archiveImage(&image_mat);
     delete(image);
     sleep(1);
   }

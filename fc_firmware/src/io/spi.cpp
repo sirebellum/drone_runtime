@@ -23,7 +23,7 @@ void SPI::packetReadWrite(SPI_PACKET* packet) {
   wiringPiSPIDataRW(SPI_CHANNEL, reinterpret_cast<unsigned char*>(packet), PACKET_SIZE);
 }
 
-void SPI::shipmentReceive(unsigned char* shipment) {
+uint32_t SPI::shipmentReceive(unsigned char* shipment) {
 
   // Receiving and handling
   this->packetReadWrite();
@@ -32,7 +32,7 @@ void SPI::shipmentReceive(unsigned char* shipment) {
   uint32_t idx = 0;
 
   // Setup buffer for shipment
-  shipment = new unsigned char(len);
+  shipment = new unsigned char(len*BUFFER_SIZE);
   
   while (idx < len) {
     this->packetReadWrite();
@@ -41,32 +41,5 @@ void SPI::shipmentReceive(unsigned char* shipment) {
             BUFFER_SIZE);
     idx = packet->idx;
   }
-}
-
-uint32_t SPI::shipmentRequestPic() {
-  // Request image
-  this->packet = reinterpret_cast<unsigned char*>(new SPI_PACKET{-1,-1,0});
-  this->packetReadWrite();
-  
-  // Get image size
-  this->packet = reinterpret_cast<unsigned char*>(new SPI_PACKET{0,0,0});
-  uint32_t* size;
-  this->packetReadWrite();
-  size = reinterpret_cast<uint32_t*>(this->packet);
-
-  return *size;
-}
-
-uint32_t SPI::shipmentRequestVid() {
-  // Request video
-  SPI_PACKET request_packet = {-2,-2,0};
-  this->packetReadWrite(&request_packet);
-
-  // Get image size
-  this->packet = reinterpret_cast<unsigned char*>(new SPI_PACKET{0,0,0});
-  uint32_t* size;
-  this->packetReadWrite();
-  size = reinterpret_cast<uint32_t*>(this->packet);
-
-  return *size;
+  return len*BUFFER_SIZE;
 }

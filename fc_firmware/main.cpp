@@ -7,20 +7,21 @@
 #include <sensors/mpu.h>
 #include <findp.h>
 #include <microtvm_graph_executor.h>
+#include <dlpack/dlpack.h>
 
 #include <chrono>
 #include <fstream>
 #include <sstream>
 #include <thread>
 
-#define DEBUG true
+#define DEBUG false
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
 int main(int argc, char **argv) {
 
   // Set up tvm runtime
-  std::string so = "fc.so";
+  std::string so = "./fc.so";
   printf("Loading %s\n", so.c_str());
   tvm::micro::DSOModule *mod = new tvm::micro::DSOModule(so.c_str());
 
@@ -88,9 +89,9 @@ int main(int argc, char **argv) {
     continue;
 
   // Set up people detection
-  // printf("Init find-a-person\n");
-  // FINDP findp = FINDP(&spi);
-  // std::thread findp_thread(&FINDP::run, &findp);
+  printf("Init find-a-person\n");
+  FINDP findp = FINDP(&spi);
+  std::thread findp_thread(&FINDP::run, &findp);
 
   // Set up navigator
   printf("Init nav\n");

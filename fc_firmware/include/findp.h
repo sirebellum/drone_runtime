@@ -3,8 +3,7 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 #include <io/spi.h>
-#include <dlpack/dlpack.h>
-#include <microtvm_graph_executor.h>
+#include <opencv2/opencv.hpp>
 
 class FINDP {
 public:
@@ -12,6 +11,7 @@ public:
   ~FINDP();
   SPI *spi;
   void run();
+  void archiveImage(cv::Mat* img);
   bool running;
   bool detected = false;
 
