@@ -11,6 +11,7 @@ SPI::SPI() {
   if (this->fd == -1) {
     std::cout << "SPI: Failed to open SPI device!" << std::endl;
   }
+  this->packet = (unsigned char*) new SPI_PACKET{0,0,0};
 }
 
 SPI::~SPI() { close(this->fd); }
@@ -20,31 +21,30 @@ void SPI::packetReadWrite() {
 }
 
 void SPI::packetReadWrite(SPI_PACKET* packet) {
-  wiringPiSPIDataRW(SPI_CHANNEL, reinterpret_cast<unsigned char*>(packet), PACKET_SIZE);
+  wiringPiSPIDataRW(SPI_CHANNEL, (unsigned char*)packet, PACKET_SIZE);
 }
 
 uint32_t SPI::shipmentReceive(unsigned char* shipment) {
 
   // Receiving and handling
   this->packetReadWrite();
-  SPI_PACKET* packet = reinterpret_cast<SPI_PACKET*>(this->packet);
-  uint32_t len = packet->len;
-  uint32_t idx = packet->idx;
+  SPI_PACKET* packet = (SPI_PACKET*)this->packet;
+  int32_t len = packet->len;
+  int32_t idx = packet->idx;
 
-  while (idx != 0) { // Not the first packet
+  while (packet->idx != 1) // Not the first packet
     this->packetReadWrite();
-    len = packet->len;
-    idx = packet->idx;
-  }
+  idx = packet->idx;
+  len = packet->len;
 
   // Setup buffer for shipment
   shipment = new unsigned char(len*BUFFER_SIZE);
   
-  while (idx < len) {
-    this->packetReadWrite();
-    wmemcpy(reinterpret_cast<wchar_t*>(shipment[idx*BUFFER_SIZE]),
-            reinterpret_cast<wchar_t*>(packet->buffer),
+  while (idx <= len) {
+    wmemcpy((wchar_t*)&shipment[(idx-1)*BUFFER_SIZE],
+            (wchar_t*)packet->buffer,
             BUFFER_SIZE);
+    this->packetReadWrite();
     idx = packet->idx;
   }
   return len*BUFFER_SIZE;
