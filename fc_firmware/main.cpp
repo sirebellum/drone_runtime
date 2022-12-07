@@ -3,6 +3,7 @@
 #include <dlpack/dlpack.h>
 #include <dshot/DShot.h>
 #include <io/i2c.h>
+#include <io/spi.h>
 #include <microtvm_graph_executor.h>
 #include <nav.h>
 #include <sensors/mpu.h>
@@ -54,6 +55,10 @@ int main(int argc, char **argv) {
   const char deviceName[] = {'/', 'd', 'e', 'v', '/', 'i',
                              '2', 'c', '-', '1', '\0'};
   I2c i2c = I2c(deviceName);
+
+  // Set up SPI
+  printf("Init SPI\n");
+  SPI spi = SPI();
 
   // Set up GPS
   printf("Init GPS\n");
