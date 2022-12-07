@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sensors/gps.h>
 #include <sensors/ultra.h>
+#include <sensors/compass.h>
 
 class NAV {
 	public:
@@ -11,6 +12,7 @@ class NAV {
 		~NAV();
 		GPS* gps;
 		ULTRA* ultra;
+		COMPASS* compass;
 		void move(float x, float y, float z);
 		void run();
 		bool running;

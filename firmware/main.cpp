@@ -97,7 +97,14 @@ int main(int argc, char** argv) {
     printf("Init ultrasonic\n");
     ULTRA ultra = ULTRA(&i2c);
     std::thread ultra_thread(&ULTRA::run, &ultra);
-    while (ultra.altitude == -1)
+    while (ultra.getAltitude() == -1)
+        continue;
+
+    // Set up compass
+    printf("Init compass\n");
+    COMPASS compass = COMPASS(&i2c);
+    std::thread compass_thread(&COMPASS::run, &compass);
+    while (compass.getZ() == -1)
         continue;
 
     // Set up navigator
@@ -144,6 +151,7 @@ int main(int argc, char** argv) {
         printf("x %.3f  y %.3f   z %.3f\n", in_data[0], in_data[1], in_data[2]);
         printf("R %.3f  P %.3f   Y %.3f\n", in_data[3], in_data[4], in_data[5]);
         printf("Ax %.3f Ay %.3f  Az %.3f\n", in_data[6], in_data[7], in_data[7]);
+        printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(), compass.getZ());
         // printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
         #endif
     }

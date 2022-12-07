@@ -4,20 +4,22 @@
 #include <iostream>
 #include <io/i2c.h>
 
-#define DEFAULT_ULTRA_ADRESS 0x70
+#define DEFAULT_COMPASS_ADDRESS 0x1E
 
-class ULTRA {
+class COMPASS {
 	public:
-		ULTRA(I2c* i2c_interface);
-		~ULTRA();
+		COMPASS(I2c* i2c_interface);
+		~COMPASS();
 		I2c* i2c;
-		int address = DEFAULT_ULTRA_ADRESS;
+		int address = DEFAULT_COMPASS_ADDRESS;
 		void run();
-		float getAltitude();
+		float getX();
+		float getY();
+		float getZ();		
 		bool running;
 
 	private:
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
 		char upper_byte, lower_byte;
-		float altitude = -1;
+		float x, y, z = -1;
 };
