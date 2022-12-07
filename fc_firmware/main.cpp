@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
   // Runtime loop
   printf("Running...\n");
 #if DEBUG
+  sleep(3); // To read init messages
   auto start = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = duration_cast<std::chrono::microseconds>(stop - start);
