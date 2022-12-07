@@ -47,6 +47,9 @@ void FINDP::run() {
   std::vector<cv::Rect> found;
   std::vector<double> weights;
 
+  // Notification packet
+  SPI_PACKET* notify = new SPI_PACKET{-1,-1,0};
+
   while (this->running) {
 
     // Receive picture
@@ -61,8 +64,8 @@ void FINDP::run() {
     // Check for detections
     for( size_t i = 0; i < found.size(); i++ ) {
       if (weights[i] >= 0.5) {
-        this->detected = true;
         printf("Detected!\n");
+        this->spi->packetReadWrite(notify);
       }
     }
 

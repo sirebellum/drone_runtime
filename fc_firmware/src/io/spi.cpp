@@ -29,7 +29,13 @@ uint32_t SPI::shipmentReceive(unsigned char* shipment) {
   this->packetReadWrite();
   SPI_PACKET* packet = reinterpret_cast<SPI_PACKET*>(this->packet);
   uint32_t len = packet->len;
-  uint32_t idx = 0;
+  uint32_t idx = packet->idx;
+
+  while (idx != 0) { // Not the first packet
+    this->packetReadWrite();
+    len = packet->len;
+    idx = packet->idx;
+  }
 
   // Setup buffer for shipment
   shipment = new unsigned char(len*BUFFER_SIZE);
@@ -37,7 +43,7 @@ uint32_t SPI::shipmentReceive(unsigned char* shipment) {
   while (idx < len) {
     this->packetReadWrite();
     wmemcpy(reinterpret_cast<wchar_t*>(shipment[idx*BUFFER_SIZE]),
-            reinterpret_cast<wchar_t*>(this->packet),
+            reinterpret_cast<wchar_t*>(packet->buffer),
             BUFFER_SIZE);
     idx = packet->idx;
   }

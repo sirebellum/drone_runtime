@@ -13,7 +13,6 @@ public:
   void run();
   void archiveImage(cv::Mat* img);
   bool running;
-  bool detected = false;
 
 private:
   cv::HOGDescriptor hog;
