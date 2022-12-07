@@ -21,12 +21,15 @@ FINDP::FINDP(SPI* spi, float* ir_image) {
 
 FINDP::~FINDP() {}
 
-void FINDP::archiveImage(cv::Mat* img) {
+void FINDP::archiveImage(cv::Mat* img, bool detected) {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
 
   std::ostringstream oss;
-  oss << "./images/" << std::put_time(&tm, "%d-%m-%Y_%H-%M-%S") << ".jpg";
+  if (detected)
+    oss << "./images/" << std::put_time(&tm, "%d-%m-%Y_%H-%M-%S") << ".detected.jpg";
+  else
+    oss << "./images/" << std::put_time(&tm, "%d-%m-%Y_%H-%M-%S") << ".jpg";
   auto img_str = oss.str();
 
   cv::imwrite(img_str, *img);
@@ -43,6 +46,7 @@ void FINDP::run() {
   std::vector<cv::Point> track;
   std::vector<cv::Rect> found;
   std::vector<double> weights;
+  bool detected = false;
 
   // Notification packet
   SPI_PACKET* notify = new SPI_PACKET{-1,-1,0};
@@ -63,11 +67,19 @@ void FINDP::run() {
       if (weights[i] >= 0.5) {
         printf("Detected!\n");
         this->spi->packetReadWrite(notify);
+        detected = true;
       }
     }
 
-    this->archiveImage(&image_mat);
+    // Save image to disk and delete from memory
+    this->archiveImage(&image_mat, detected);
+    detected = false;
     delete(image);
+
+    // Thermal camera time
+    image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_8U, this->ir_image);
+    this->archiveImage(&image_mat, false);
+
     sleep(1);
   }
 }

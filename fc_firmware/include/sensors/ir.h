@@ -80,9 +80,9 @@ public:
   void getImage(float* buffer);
   int resX = MLX90640_IMG_X;
   int resY = MLX90640_IMG_Y;
+  float pixels[MLX90640_IMG_X*MLX90640_IMG_Y] = {-1};
 
 private:
-  float pixels[MLX90640_IMG_X*MLX90640_IMG_Y] = {-1};
 
   int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress,
                        uint16_t nMemAddressRead, uint16_t *data);

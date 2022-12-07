@@ -16,7 +16,7 @@ public:
   ~FINDP();
   SPI *spi;
   void run();
-  void archiveImage(cv::Mat* img);
+  void archiveImage(cv::Mat* img, bool detected);
   bool running;
 
 private:

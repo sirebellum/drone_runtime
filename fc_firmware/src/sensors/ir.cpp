@@ -134,7 +134,7 @@ float IR::getPixel(int idx) {
 }
 
 void IR::getImage(float* buffer) {
-  wmemcpy(buffer, this->pixels, this->resX*this->resY);
+  wmemcpy((wchar_t*)buffer, (wchar_t*)this->pixels, this->resX*this->resY);
 }
 
 /*!
