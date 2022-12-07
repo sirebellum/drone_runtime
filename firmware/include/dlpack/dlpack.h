@@ -32,8 +32,8 @@
 #define DLPACK_DLL
 #endif
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,7 +116,8 @@ typedef enum {
   kDLFloat = 2U,
   /*!
    * \brief Opaque handle type, reserved for testing purposes.
-   * Frameworks need to agree on the handle data type for the exchange to be well-defined.
+   * Frameworks need to agree on the handle data type for the exchange to be
+   * well-defined.
    */
   kDLOpaqueHandle = 3U,
   /*! \brief bfloat16 */
@@ -129,9 +130,9 @@ typedef enum {
 } DLDataTypeCode;
 
 /*!
- * \brief The data type the tensor can hold. The data type is assumed to follow the
- * native endian-ness. An explicit error message should be raised when attempting to
- * export an array with non-native endianness
+ * \brief The data type the tensor can hold. The data type is assumed to follow
+ * the native endian-ness. An explicit error message should be raised when
+ * attempting to export an array with non-native endianness
  *
  *  Examples
  *   - float: type_code = 2, bits = 32, lanes=1
@@ -184,7 +185,7 @@ typedef struct {
    * }
    * \endcode
    */
-  void* data;
+  void *data;
   /*! \brief The device of the tensor */
   DLDevice device;
   /*! \brief Number of dimensions */
@@ -192,12 +193,12 @@ typedef struct {
   /*! \brief The data type of the pointer*/
   DLDataType dtype;
   /*! \brief The shape of the tensor */
-  int64_t* shape;
+  int64_t *shape;
   /*!
    * \brief strides of the tensor (in number of elements, not bytes)
    *  can be NULL, indicating tensor is compact and row-majored.
    */
-  int64_t* strides;
+  int64_t *strides;
   /*! \brief The offset in bytes to the beginning pointer to data */
   uint64_t byte_offset;
 } DLTensor;
@@ -215,15 +216,15 @@ typedef struct DLManagedTensor {
   /*! \brief the context of the original host framework of DLManagedTensor in
    *   which DLManagedTensor is used in the framework. It can also be NULL.
    */
-  void * manager_ctx;
+  void *manager_ctx;
   /*! \brief Destructor signature void (*)(void*) - this should be called
    *   to destruct manager_ctx which holds the DLManagedTensor. It can be NULL
    *   if there is no way for the caller to provide a reasonable destructor.
    *   The destructors deletes the argument self as well.
    */
-  void (*deleter)(struct DLManagedTensor * self);
+  void (*deleter)(struct DLManagedTensor *self);
 } DLManagedTensor;
 #ifdef __cplusplus
-}  // DLPACK_EXTERN_C
+} // DLPACK_EXTERN_C
 #endif
-#endif  // DLPACK_DLPACK_H_
+#endif // DLPACK_DLPACK_H_
