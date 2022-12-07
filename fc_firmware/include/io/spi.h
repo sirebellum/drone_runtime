@@ -10,7 +10,7 @@
 struct SPI_PACKET {
   int32_t len;
   int32_t idx;
-  unsigned char* buffer;
+  unsigned char buffer[BUFFER_SIZE];
 };
 
 class SPI {
@@ -20,9 +20,9 @@ public:
   int fd;
   void packetReadWrite();
   void packetReadWrite(SPI_PACKET* packet);
-  uint32_t shipmentReceive(unsigned char* buffer); // Returns size of packet in bytes
-  void shipmentRequestPic();
-  void shipmentRequestVid();
+  void shipmentReceive(unsigned char* buffer);
+  uint32_t shipmentRequestPic();  // Returns size of packet in bytes
+  uint32_t shipmentRequestVid();
 
 private:
   unsigned char* packet;

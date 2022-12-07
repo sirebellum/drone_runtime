@@ -1,12 +1,12 @@
 #include <stdio.h>
+#include <string>
 
-#include <dlpack/dlpack.h>
 #include <dshot/DShot.h>
 #include <io/i2c.h>
-#include <io/spi.h>
-#include <microtvm_graph_executor.h>
 #include <nav.h>
 #include <sensors/mpu.h>
+#include <findp.h>
+#include <microtvm_graph_executor.h>
 
 #include <chrono>
 #include <fstream>
@@ -20,14 +20,14 @@ int abs(int v) { return v * ((v > 0) - (v < 0)); }
 int main(int argc, char **argv) {
 
   // Set up tvm runtime
-  const char so[] = {'.', '/', 'm', 'o', 'd', 'e', 'l', '.', 's', 'o', '\0'};
-  printf("Loading %s\n", so);
-  tvm::micro::DSOModule *mod = new tvm::micro::DSOModule(so);
+  std::string so = "fc.so";
+  printf("Loading %s\n", so.c_str());
+  tvm::micro::DSOModule *mod = new tvm::micro::DSOModule(so.c_str());
 
-  std::ifstream t("model.json");
+  std::ifstream t("fc.json");
   std::stringstream json;
   json << t.rdbuf();
-  printf("Init graph exec\n");
+  printf("Init fc graph exec\n");
   tvm::micro::MicroGraphExecutor *exec =
       new tvm::micro::MicroGraphExecutor(json.str(), mod);
 
@@ -90,6 +90,7 @@ int main(int argc, char **argv) {
   // Set up people detection
   // printf("Init find-a-person\n");
   // FINDP findp = FINDP(&spi);
+  // std::thread findp_thread(&FINDP::run, &findp);
 
   // Set up navigator
   printf("Init nav\n");
