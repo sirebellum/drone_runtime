@@ -133,13 +133,4 @@ int main(int argc, char **argv) {
 // printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
 #endif
   }
-
-  gps.running = false;
-  mpu.running = false;
-  nav.running = false;
-  ultra.running = false;
-  ultra_thread.join();
-  nav_thread.join();
-  mpu_thread.join();
-  gps_thread.join();
 }
