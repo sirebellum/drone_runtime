@@ -16,8 +16,8 @@ class ULTRA {
 		float getAltitude();
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
 		bool running;
+		float altitude = -1;
 
 	private:
 		char upper_byte, lower_byte;
-		float altitude;
 };

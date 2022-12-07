@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
     // Set up tvm runtime
     const char so[] = {'.','/','m','o','d','e','l','.','s','o','\0'};
-    printf("Init %s\n", so);
+    printf("Loading %s\n", so);
     tvm::micro::DSOModule* mod = new tvm::micro::DSOModule(so);
 
     std::ifstream t("model.json");
@@ -49,7 +49,6 @@ int main(int argc, char** argv) {
         16,
         0
     };
-    printf("Init in buffer\n");
     DLTensor in = {
         in_data,
         device,
@@ -59,7 +58,6 @@ int main(int argc, char** argv) {
         stride,
         0
     };
-    printf("Init out buffer\n");
     DLTensor out = {
         out_data,
         device,
@@ -92,11 +90,15 @@ int main(int argc, char** argv) {
     printf("Init acceleromter\n");
     MPU mpu = MPU(&i2c, in_data);
     std::thread mpu_thread(&MPU::run, &mpu);
+    while (*mpu.z_accel_g == -1)
+        continue;
 
     // Set up ultrasonic
     printf("Init ultrasonic\n");
     ULTRA ultra = ULTRA(&i2c);
     std::thread ultra_thread(&ULTRA::run, &ultra);
+    while (ultra.altitude == -1)
+        continue;
 
     // Set up navigator
     printf("Init nav\n");
@@ -130,8 +132,6 @@ int main(int argc, char** argv) {
         throttles[3] = out_data[3]*2048;
         dshot.setThrottles(throttles);
         dshot.sendData();
-
-        // Update position
 
         #if DEBUG
         if (counter%10000) {

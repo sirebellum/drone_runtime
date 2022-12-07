@@ -16,6 +16,12 @@ class MPU {
 		int16_t two_complement_to_int( uint8_t LSB, uint8_t MSB);
 		void run();
 		float* buffer;
+		float* x_gyro;
+		float* y_gyro;
+		float* z_gyro;
+		float* x_accel_g;
+		float* y_accel_g;
+		float* z_accel_g;
 		bool running;
 
 	private:
@@ -23,9 +29,6 @@ class MPU {
 		char gyro_x_h,gyro_x_l,gyro_y_h,gyro_y_l,gyro_z_h,gyro_z_l;
 		uint16_t fifo_len = 0;
 		int16_t x_accel = 0;
-		int16_t x_gyro = 0;
 		int16_t y_accel = 0;
-		int16_t y_gyro = 0;
 		int16_t z_accel = 0;
-		int16_t z_gyro = 0;
 };

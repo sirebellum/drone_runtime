@@ -18,6 +18,12 @@
 MPU::MPU(I2c* i2c_interface, float* buffer)
 {
     this->buffer = buffer;
+    this->x_gyro = buffer+3;
+    this->y_gyro = buffer+4;
+    this->z_gyro = buffer+5;
+    this->x_accel_g = buffer+6;
+    this->y_accel_g = buffer+7;
+    this->z_accel_g = buffer+8;
 
     this->i2c = i2c_interface;
 
@@ -103,17 +109,17 @@ void MPU::run()
             this->accel_z_h = this->i2c->readByte(REG_FIFO);
             this->accel_z_l = this->i2c->readByte(REG_FIFO);
 
-            this->buffer[3]= two_complement_to_int(this->gyro_x_h,this->gyro_x_l);
-            this->buffer[4]= two_complement_to_int(this->gyro_y_h,this->gyro_y_l);
-            this->buffer[5]= two_complement_to_int(this->gyro_z_h,this->gyro_z_l);
+            *this->x_gyro = two_complement_to_int(this->gyro_x_h,this->gyro_x_l);
+            *this->y_gyro = two_complement_to_int(this->gyro_y_h,this->gyro_y_l);
+            *this->z_gyro = two_complement_to_int(this->gyro_z_h,this->gyro_z_l);
 
             this->x_accel= two_complement_to_int(this->accel_x_h,this->accel_x_l);
             this->y_accel= two_complement_to_int(this->accel_y_h,this->accel_y_l);
             this->z_accel= two_complement_to_int(this->accel_z_h,this->accel_z_l);
 
-            this->buffer[6] = ((float) this->x_accel)/16384;
-            this->buffer[7] = ((float) this->y_accel)/16384;
-            this->buffer[8] = ((float) this->z_accel)/16384;
+            *this->x_accel_g = ((float) this->x_accel)/16384;
+            *this->y_accel_g = ((float) this->y_accel)/16384;
+            *this->z_accel_g = ((float) this->z_accel)/16384;
 
             this->i2c->locked = false;
             usleep(1000);
