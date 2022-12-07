@@ -133,6 +133,10 @@ float IR::getPixel(int idx) {
     return this->pixels[idx];
 }
 
+void IR::getImage(float* buffer) {
+  wmemcpy(buffer, this->pixels, this->resX*this->resY);
+}
+
 /*!
  *    @brief  Read 2 pages, calculate temperatures and place into framebuf
  *    @param  framebuf 24*32 floating point memory buffer

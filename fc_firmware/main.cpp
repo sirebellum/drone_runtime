@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
   // Set up people detection
   printf("Init find-a-person\n");
-  FINDP findp = FINDP(&spi);
+  FINDP findp = FINDP(&spi, ir.pixels);
   std::thread findp_thread(&FINDP::run, &findp);
 
   // Set up navigator

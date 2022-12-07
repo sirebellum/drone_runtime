@@ -8,13 +8,10 @@
 
 #include <findp.h>
 
-#define IMAGE_CAM_X 640
-#define IMAGE_X 640
-#define IMAGE_CAM_Y 480
-#define IMAGE_Y 480
-
-FINDP::FINDP(SPI* spi) {
+FINDP::FINDP(SPI* spi, float* ir_image) {
   this->spi = spi;
+
+  this->ir_image = ir_image;
 
   hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
 

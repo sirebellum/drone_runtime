@@ -65,7 +65,6 @@ public:
   bool begin();
   I2c* i2c;
   void run();
-  float getPixel(int index);
   int address = MLX90640_I2CADDR_DEFAULT;
   mlx90640_mode_t getMode(void);
   void setMode(mlx90640_mode_t mode);
@@ -73,11 +72,14 @@ public:
   void setResolution(mlx90640_resolution_t res);
   mlx90640_refreshrate_t getRefreshRate(void);
   void setRefreshRate(mlx90640_refreshrate_t res);
-
   int getFrame();
 
   bool running;
   uint16_t serialNumber[3]; ///< Unique serial number read from device
+  float getPixel(int index);
+  void getImage(float* buffer);
+  int resX = MLX90640_IMG_X;
+  int resY = MLX90640_IMG_Y;
 
 private:
   float pixels[MLX90640_IMG_X*MLX90640_IMG_Y] = {-1};
