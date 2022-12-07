@@ -4,11 +4,12 @@
 #include <sys/ioctl.h>
 #include <wiringPiSPI.h>
 
-#define BUFFER_SIZE 1024 + 16 // for packet metadata
+#define BUFFER_SIZE 1024
+#define PACKET_SIZE 1024 + 16 // for packet metadata
 
 struct SPI_PACKET {
-  uint32_t len;
-  uint32_t idx;
+  int32_t len;
+  int32_t idx;
   unsigned char* buffer;
 };
 
@@ -17,11 +18,12 @@ public:
   SPI();
   ~SPI();
   int fd;
-  void rawReadWrite();
-  int readBuffer(unsigned char* buffer);
+  void packetReadWrite();
+  void packetReadWrite(SPI_PACKET* packet);
   uint32_t shipmentReceive(unsigned char* buffer); // Returns size of packet in bytes
+  void shipmentRequestPic();
+  void shipmentRequestVid();
 
 private:
-  unsigned char _buffer[BUFFER_SIZE];
-  unsigned char* buffer = _buffer;
+  unsigned char* packet;
 };

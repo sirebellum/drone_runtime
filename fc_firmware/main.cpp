@@ -87,6 +87,10 @@ int main(int argc, char **argv) {
   while (compass.getZ() == -1)
     continue;
 
+  // Set up people detection
+  // printf("Init find-a-person\n");
+  // FINDP findp = FINDP(&spi);
+
   // Set up navigator
   printf("Init nav\n");
   NAV nav = NAV(&gps, &ultra, in_data);
