@@ -5,15 +5,14 @@
 #include <dshot/DShot.h>
 #include <io/i2c.h>
 #include <sensors/mpu.h>
-#include <sensors/gps.h>
-#include <sensors/ultra.h>
+#include <nav.h>
 
 #include <sstream>
 #include <fstream>
 #include <chrono>
 #include <thread>
 
-#define DEBUG false
+#define DEBUG true
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
@@ -96,8 +95,13 @@ int main(int argc, char** argv) {
 
     // Set up ultrasonic
     printf("Init ultrasonic\n");
-    ULTRA ultra = ULTRA(&i2c, in_data);
+    ULTRA ultra = ULTRA(&i2c);
     std::thread ultra_thread(&ULTRA::run, &ultra);
+
+    // Set up navigator
+    printf("Init nav\n");
+    NAV nav = NAV(&gps, &ultra, in_data);
+    std::thread nav_thread(&NAV::run, &nav);
 
     // Runtime loop
     printf("Running...\n");
@@ -146,8 +150,10 @@ int main(int argc, char** argv) {
 
     gps.running = false;
     mpu.running = false;
+    nav.running = false;
     ultra.running = false;
     ultra_thread.join();
+    nav_thread.join();
     mpu_thread.join();
     gps_thread.join();
 }

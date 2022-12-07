@@ -9,8 +9,8 @@ class GPS {
 		GPS();
 		~GPS();
 		void run();
-		float latitude();
-		float longitude();
+		float getLatitude();
+		float getLongitude();
 		struct home {
 			float latitude = -0.69;
 			float longitude = -0.69;

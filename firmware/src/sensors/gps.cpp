@@ -14,7 +14,7 @@ static char *mode_str[MODE_STR_NUM] = {
 GPS::GPS()
 {
     if (0 != gps_open("localhost", "2947", &this->gps_data)) 
-        printf("Open error.  Bye, bye\n");
+        printf("GPS open error.  Bye, bye\n");
     (void)gps_stream(&this->gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
     // Set home
@@ -53,14 +53,14 @@ GPS::~GPS()
     (void)gps_close(&this->gps_data);
 }
 
-float GPS::latitude()
+float GPS::getLatitude()
 {
     if (isfinite(this->gps_data.fix.latitude))
         return this->gps_data.fix.latitude;
     else
         return 0.69;
 }
-float GPS::longitude()
+float GPS::getLongitude()
 {
     if (isfinite(this->gps_data.fix.longitude))
         return this->gps_data.fix.longitude;

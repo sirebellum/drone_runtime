@@ -8,15 +8,16 @@
 
 class ULTRA {
 	public:
-		ULTRA(I2c* i2c_interface, float* buffer);
+		ULTRA(I2c* i2c_interface);
 		~ULTRA();
 		I2c* i2c;
 		int address = DEFAULT_ULTRA_ADRESS;
 		void run();
+		float getAltitude();
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
-		float* buffer;
 		bool running;
 
 	private:
 		char upper_byte, lower_byte;
+		float altitude;
 };
