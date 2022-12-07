@@ -17,7 +17,9 @@ NAV::NAV(GPS* gps, ULTRA* ultra, float* buffer)
 {
     this->gps = gps;
     this->ultra = ultra;
-    this->buffer = buffer;
+    this->x = buffer+0;
+    this->y = buffer+1;
+    this->z = buffer+2;
 
     // Hover
     this->final_lat = this->gps->getLatitude();
@@ -55,8 +57,8 @@ void NAV::run()
         // printf("%f, %f, %f\n", this->gps->getLatitude() - this->final_lat,
         //                        this->gps->getLongitude() - this->final_lon,
         //                        this->ultra->getAltitude() - this->final_z);
-        buffer[0] = (this->gps->getLatitude() - this->final_lat)*LatToFeet/FeetToX;
-        buffer[1] = (this->gps->getLongitude() - this->final_lon)*LonToFeet/FeetToY;
-        buffer[2] = (this->ultra->getAltitude() - this->final_z)/CMToZ+0.5; // Default hover height is 0.5
+        *this->x = (this->gps->getLatitude() - this->final_lat)*LatToFeet/FeetToX;
+        *this->y = (this->gps->getLongitude() - this->final_lon)*LonToFeet/FeetToY;
+        *this->z = (this->ultra->getAltitude() - this->final_z)/CMToZ+0.5; // Default hover height is 0.5
     }
 }

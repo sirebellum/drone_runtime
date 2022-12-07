@@ -17,7 +17,6 @@
 
 MPU::MPU(I2c* i2c_interface, float* buffer)
 {
-    this->buffer = buffer;
     this->x_gyro = buffer+3;
     this->y_gyro = buffer+4;
     this->z_gyro = buffer+5;

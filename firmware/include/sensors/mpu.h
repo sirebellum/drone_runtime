@@ -15,7 +15,6 @@ class MPU {
 		uint16_t merge_bytes( uint8_t LSB, uint8_t MSB);
 		int16_t two_complement_to_int( uint8_t LSB, uint8_t MSB);
 		void run();
-		float* buffer;
 		float* x_gyro;
 		float* y_gyro;
 		float* z_gyro;

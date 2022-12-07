@@ -11,11 +11,11 @@ class NAV {
 		~NAV();
 		GPS* gps;
 		ULTRA* ultra;
-		float* buffer;
 		void move(float x, float y, float z);
 		void run();
 		bool running;
 		float x_target, y_target, z_target;
+		float *x, *y, *z;
 		float init_lat, init_lon, init_z;
 		float final_lat, final_lon, final_z;
 
