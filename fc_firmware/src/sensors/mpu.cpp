@@ -76,6 +76,7 @@ void MPU::run() {
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
+      this->i2c->locked = false;
       printf("Unable to open mpu sensor i2c address...\n");
       usleep(1000);
       continue;

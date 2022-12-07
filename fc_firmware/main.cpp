@@ -5,6 +5,7 @@
 #include <io/i2c.h>
 #include <nav.h>
 #include <sensors/mpu.h>
+#include <sensors/ir.h>
 #include <findp.h>
 #include <microtvm_graph_executor.h>
 #include <dlpack/dlpack.h>
@@ -86,6 +87,13 @@ int main(int argc, char **argv) {
   COMPASS compass = COMPASS(&i2c);
   std::thread compass_thread(&COMPASS::run, &compass);
   while (compass.getZ() == -1)
+    continue;
+
+  // Set up IR
+  printf("Init IR\n");
+  IR ir = IR(&i2c);
+  std::thread ir_thread(&IR::run, &ir);
+  while (ir.getPixel(-1) == -1)
     continue;
 
   // Set up people detection

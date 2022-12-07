@@ -45,7 +45,7 @@ int I2c::writeByte(uint8_t command, uint8_t data) {
     std::cout << "I2C: Failed to write byte to I2c." << std::endl;
     return -1;
   }
-  return 1;
+  return 0;
 }
 
 int I2c::writeBlockData(uint8_t command, uint8_t size, __u8 *data) {
@@ -73,6 +73,7 @@ uint16_t I2c::readBlock(uint8_t command, uint8_t size, uint8_t *data) {
   int result = i2c_smbus_read_i2c_block_data(fd, command, size, data);
   if (result != size) {
     std::cout << "I2C: Failed to read block from I2c." << std::endl;
+    return -1;
   }
-  return result;
+  return 0;
 }
