@@ -77,7 +77,7 @@ void FINDP::run() {
     delete(image);
 
     // Thermal camera time
-    image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_8U, this->ir_image);
+    image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_32F, this->ir_image);
     this->archiveImage(&image_mat, false);
 
     sleep(1);
