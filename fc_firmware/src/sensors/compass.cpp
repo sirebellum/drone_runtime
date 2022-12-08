@@ -43,7 +43,7 @@ void COMPASS::run() {
     if (this->i2c->addressSet(this->address) == -1) {
       this->i2c->locked = false;
       printf("Unable to access compass sensor i2c address...\n");
-      usleep(1000);
+      usleep(100);
       continue;
     }
 
@@ -64,6 +64,6 @@ void COMPASS::run() {
         (float)this->merge_bytes(this->lower_byte, this->upper_byte) / 65535;
 
     this->i2c->locked = false;
-    usleep(1000);
+    usleep(100);
   }
 }

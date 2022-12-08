@@ -26,7 +26,6 @@ public:
 private:
   char accel_x_h, accel_x_l, accel_y_h, accel_y_l, accel_z_h, accel_z_l;
   char gyro_x_h, gyro_x_l, gyro_y_h, gyro_y_l, gyro_z_h, gyro_z_l;
-  uint16_t fifo_len = 0;
   int16_t x_accel = 0;
   int16_t y_accel = 0;
   int16_t z_accel = 0;

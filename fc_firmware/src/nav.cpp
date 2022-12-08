@@ -13,9 +13,10 @@ float convertToLat(float x) { return x / FeetToX / LatToFeet; }
 float convertToLon(float y) { return y / FeetToY / LonToFeet; }
 float convertToCM(float z) { return z / CMToZ; }
 
-NAV::NAV(GPS *gps, ULTRA *ultra, float *buffer) {
+NAV::NAV(GPS *gps, ULTRA *ultra, COMPASS* compass, float *buffer) {
   this->gps = gps;
   this->ultra = ultra;
+  this->compass = compass;
   this->x = buffer + 0;
   this->y = buffer + 1;
   this->z = buffer + 2;
@@ -31,7 +32,7 @@ NAV::NAV(GPS *gps, ULTRA *ultra, float *buffer) {
 
 NAV::~NAV() {}
 
-void NAV::move(float x, float y, float z) {
+void NAV::move(float x, float y, float z, float Y) {
   this->x_target = x;
   this->y_target = y;
   this->z_target = z;
