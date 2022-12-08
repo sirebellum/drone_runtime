@@ -2,6 +2,7 @@
 #include <sensors/mpu.h>
 #include <unistd.h>
 
+#define REG_CONFIG 0x1A
 #define REG_PWR_MGMT_1 0x6B
 #define REG_INTRPT_MGMT 0x38
 #define REG_INTRPT_STATUS 0x3A
@@ -31,7 +32,12 @@ MPU::MPU(I2c *i2c_interface, float *buffer) {
   this->i2c->writeByte(REG_PWR_MGMT_1, 0x00);
   this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeByte(REG_GYRO_CONFIG, 0x00);
+
+  // Enable interrupts
   this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
+
+  // Set up bandwidth to something less noisy
+  this->i2c->writeByte(REG_CONFIG, 0x01);
 
   this->running = true;
 }
@@ -93,7 +99,7 @@ void MPU::run() {
     this->accel_z_l = this->i2c->readByte(REG_ACCEL_Z+1);
 
     *this->x_gyro = ((float)two_complement_to_int(this->gyro_x_h, this->gyro_x_l) / 262) / 250; // Normalize to range of [-250,250] and then to [-1,1]
-    *this->y_gyro = ((float)two_complement_to_int(this->gyro_y_h, this->gyro_y_l) / 262) / 250;
+    *this->y_gyro = ((float)two_complement_to_int(this->gyro_y_h, this->gyro_y_l) / 262) / 250; // rad/s
     *this->z_gyro = ((float)two_complement_to_int(this->gyro_z_h, this->gyro_z_l) / 262) / 250;
 
     this->x_accel = two_complement_to_int(this->accel_x_h, this->accel_x_l);
@@ -101,7 +107,7 @@ void MPU::run() {
     this->z_accel = two_complement_to_int(this->accel_z_h, this->accel_z_l);
 
     *this->x_accel_g = ((float)this->x_accel / 16384) / 2; // Normalize to range of [-2,2] and then to [-1,1]
-    *this->y_accel_g = ((float)this->y_accel / 16384) / 2;
+    *this->y_accel_g = ((float)this->y_accel / 16384) / 2; // m/s^2
     *this->z_accel_g = ((float)this->z_accel / 16384) / 2;
 
     this->i2c->locked = false;
