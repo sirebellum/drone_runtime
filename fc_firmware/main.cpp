@@ -1,21 +1,21 @@
 #include <stdio.h>
 #include <string>
 
-#include <dlpack/dlpack.h>
 #include <dshot/DShot.h>
-#include <findp.h>
 #include <io/i2c.h>
-#include <microtvm_graph_executor.h>
 #include <nav.h>
-#include <sensors/ir.h>
 #include <sensors/mpu.h>
+#include <sensors/ir.h>
+#include <findp.h>
+#include <microtvm_graph_executor.h>
+#include <dlpack/dlpack.h>
 
 #include <chrono>
 #include <fstream>
 #include <sstream>
 #include <thread>
 
-#define DEBUG true
+#define DEBUG false
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
   uint8_t motor_pins[] = {4, 17, 27, 22};
   dshot.attach(motor_pins);
   uint16_t throttles[4] = {0};
+  std::thread dshot_thread(&DShot::run, &dshot);
 
   // Set up i2c
   printf("Init I2c\n");
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
   // Runtime loop
   printf("Running...\n");
 #if DEBUG
-  sleep(3); // To read init messages
+  sleep(2); // To read init messages
   auto start = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = duration_cast<std::chrono::microseconds>(stop - start);
@@ -133,7 +134,6 @@ int main(int argc, char **argv) {
     throttles[2] = out_data[2] * 2048;
     throttles[3] = out_data[3] * 2048;
     dshot.setThrottles(throttles);
-    dshot.sendData();
 
 #if DEBUG
     if (counter % 10000) {
@@ -150,7 +150,6 @@ int main(int argc, char **argv) {
     printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(),
            compass.getZ());
     printf("===========================\n");
-// printf("latitude %.3f   longitude %.3f\n", gps.latitude(), gps.longitude());
 #endif
   }
 }

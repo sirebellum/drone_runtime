@@ -1,6 +1,7 @@
 #include <dshot/DShot.h>
 #include <io/gpio.h>
 #include <iostream>
+#include <chrono>
 
 /*
   Prepare data packet, attach 0 to telemetry bit, and calculate CRC
@@ -23,7 +24,9 @@ static inline uint16_t createPacket(uint16_t throttle) {
 
 /****************** end of static functions *******************/
 
-DShot::DShot() {}
+DShot::DShot() {
+  this->running = true;
+}
 
 /*
   DSHOT600 implementation
@@ -60,6 +63,27 @@ void DShot::setThrottles(uint16_t *throttles) {
   this->_throttles[2] = throttles[2];
   this->_throttles[3] = throttles[3];
 
+  this->createPackets();
+}
+
+void DShot::createPackets() {
   for (size_t i = 0; i < 4; ++i)
-    this->_packets[i] = createPacket(throttles[i]);
+    this->_packets[i] = createPacket(this->_throttles[i]);
+}
+
+void DShot::run() {
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  while (this->running) {
+    start = std::chrono::high_resolution_clock::now();
+
+    this->createPackets();
+    this->sendData();
+
+    // Maintain frequency
+    while (duration_cast<std::chrono::microseconds>(stop-start).count() < this->out_period) {
+      stop = std::chrono::high_resolution_clock::now();
+      usleep(10);
+    }
+  }
 }
