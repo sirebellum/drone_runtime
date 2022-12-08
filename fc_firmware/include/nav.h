@@ -19,8 +19,8 @@ public:
 
 private:
   float x_target, y_target, z_target;
-  float *x, *y, *z;
-  float *R, *P, *Y;
+  float x, y, z;
+  float yaw;
   float init_lat, init_lon, init_z;
   float final_lat, final_lon, final_z;
 };

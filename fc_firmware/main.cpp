@@ -72,9 +72,9 @@ int main(int argc, char **argv) {
   // Set up acceleromter
   printf("Init acceleromter\n");
   MPU mpu = MPU(&i2c, in_data);
+  printf("Calibrating...\n");
+  mpu.calibrate();
   std::thread mpu_thread(&MPU::run, &mpu);
-  while (*mpu.z_accel_g == -1)
-    continue;
 
   // Set up ultrasonic
   printf("Init ultrasonic\n");
@@ -136,11 +136,11 @@ int main(int argc, char **argv) {
 #if DEBUG
     stop = std::chrono::high_resolution_clock::now();
     duration = duration_cast<std::chrono::microseconds>(stop - start);
-    while (duration.count() < 1000000) {
-      stop = std::chrono::high_resolution_clock::now();
-      duration = duration_cast<std::chrono::microseconds>(stop - start);
-      usleep(1000);
-    }
+    // while (duration.count() < 1000000) {
+      // stop = std::chrono::high_resolution_clock::now();
+      // duration = duration_cast<std::chrono::microseconds>(stop - start);
+      // usleep(1000);
+    // }
     cout << duration.count() << "us\n";
     printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            out_data[3]);

@@ -17,6 +17,7 @@
 #define REG_ACCEL_Z 0x3F
 
 MPU::MPU(I2c *i2c_interface, float *buffer) {
+  this->buffer = buffer;
   this->x_gyro = buffer + 6;
   this->y_gyro = buffer + 7;
   this->z_gyro = buffer + 8;
@@ -37,7 +38,7 @@ MPU::MPU(I2c *i2c_interface, float *buffer) {
   this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
-  this->i2c->writeByte(REG_CONFIG, 0x01);
+  this->i2c->writeByte(REG_CONFIG, 0x05);
 
   this->running = true;
 }
@@ -65,6 +66,67 @@ uint16_t MPU::merge_bytes(uint8_t LSB, uint8_t MSB) {
   return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
 }
 
+void MPU::calibrate() {
+
+  // Wait for lock on i2c
+  while (this->i2c->locked)
+    usleep(100);
+  this->i2c->locked = true;
+
+  if (this->i2c->addressSet(this->address) == -1) {
+    this->i2c->locked = false;
+    printf("Unable to open mpu sensor i2c address...\n");
+    return;
+  }
+
+  // Sample gyro/acc output and calculate average offset
+  size_t nsamples = 128;
+  float avg;
+  float buffer[128];
+  for (int axis = 0; axis < 6; ++axis) {
+    avg = 0;
+    for (int s = 0; s < nsamples; ++s) {
+      // Wait for mpu data to be ready
+      while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
+        usleep(100);
+      this->read();
+      buffer[s] = this->buffer[axis+6];
+    }
+    // get average
+    for(int i=0;i<nsamples;++i) {avg+=buffer[i];}
+    this->offset_buffer[axis] = avg/nsamples;
+  }
+  this->i2c->locked = false;
+}
+
+void MPU::read() {
+  this->gyro_x_h = this->i2c->readByte(REG_GYRO_X);
+  this->gyro_x_l = this->i2c->readByte(REG_GYRO_X+1);
+  this->gyro_y_h = this->i2c->readByte(REG_GYRO_Y);
+  this->gyro_y_l = this->i2c->readByte(REG_GYRO_Y+1);
+  this->gyro_z_h = this->i2c->readByte(REG_GYRO_Z);
+  this->gyro_z_l = this->i2c->readByte(REG_GYRO_Z+1);
+
+  this->accel_x_h = this->i2c->readByte(REG_ACCEL_X);
+  this->accel_x_l = this->i2c->readByte(REG_ACCEL_X+1);
+  this->accel_y_h = this->i2c->readByte(REG_ACCEL_Y);
+  this->accel_y_l = this->i2c->readByte(REG_ACCEL_Y+1);
+  this->accel_z_h = this->i2c->readByte(REG_ACCEL_Z);
+  this->accel_z_l = this->i2c->readByte(REG_ACCEL_Z+1);
+
+  *this->x_gyro = ((float)two_complement_to_int(this->gyro_x_h, this->gyro_x_l) / 262) / 250 - *this->x_gyro_offset; // Normalize to range of [-250,250] and then to [-1,1]
+  *this->y_gyro = ((float)two_complement_to_int(this->gyro_y_h, this->gyro_y_l) / 262) / 250 - *this->y_gyro_offset; // rad/s
+  *this->z_gyro = ((float)two_complement_to_int(this->gyro_z_h, this->gyro_z_l) / 262) / 250 - *this->z_gyro_offset;
+
+  this->x_accel = two_complement_to_int(this->accel_x_h, this->accel_x_l);
+  this->y_accel = two_complement_to_int(this->accel_y_h, this->accel_y_l);
+  this->z_accel = two_complement_to_int(this->accel_z_h, this->accel_z_l);
+
+  *this->x_accel_g = ((float)this->x_accel / 16384) / 2 - *this->x_acc_offset; // Normalize to range of [-2,2] and then to [-1,1]
+  *this->y_accel_g = ((float)this->y_accel / 16384) / 2 - *this->y_acc_offset; // m/s^2
+  *this->z_accel_g = ((float)this->z_accel / 16384) / 2 - *this->z_acc_offset;
+}
+
 void MPU::run() {
   while (this->running) {
 
@@ -84,31 +146,8 @@ void MPU::run() {
       continue;
     }
 
-    this->gyro_x_h = this->i2c->readByte(REG_GYRO_X);
-    this->gyro_x_l = this->i2c->readByte(REG_GYRO_X+1);
-    this->gyro_y_h = this->i2c->readByte(REG_GYRO_Y);
-    this->gyro_y_l = this->i2c->readByte(REG_GYRO_Y+1);
-    this->gyro_z_h = this->i2c->readByte(REG_GYRO_Z);
-    this->gyro_z_l = this->i2c->readByte(REG_GYRO_Z+1);
-
-    this->accel_x_h = this->i2c->readByte(REG_ACCEL_X);
-    this->accel_x_l = this->i2c->readByte(REG_ACCEL_X+1);
-    this->accel_y_h = this->i2c->readByte(REG_ACCEL_Y);
-    this->accel_y_l = this->i2c->readByte(REG_ACCEL_Y+1);
-    this->accel_z_h = this->i2c->readByte(REG_ACCEL_Z);
-    this->accel_z_l = this->i2c->readByte(REG_ACCEL_Z+1);
-
-    *this->x_gyro = ((float)two_complement_to_int(this->gyro_x_h, this->gyro_x_l) / 262) / 250; // Normalize to range of [-250,250] and then to [-1,1]
-    *this->y_gyro = ((float)two_complement_to_int(this->gyro_y_h, this->gyro_y_l) / 262) / 250; // rad/s
-    *this->z_gyro = ((float)two_complement_to_int(this->gyro_z_h, this->gyro_z_l) / 262) / 250;
-
-    this->x_accel = two_complement_to_int(this->accel_x_h, this->accel_x_l);
-    this->y_accel = two_complement_to_int(this->accel_y_h, this->accel_y_l);
-    this->z_accel = two_complement_to_int(this->accel_z_h, this->accel_z_l);
-
-    *this->x_accel_g = ((float)this->x_accel / 16384) / 2; // Normalize to range of [-2,2] and then to [-1,1]
-    *this->y_accel_g = ((float)this->y_accel / 16384) / 2; // m/s^2
-    *this->z_accel_g = ((float)this->z_accel / 16384) / 2;
+    // Read and store in memory
+    this->read();
 
     this->i2c->locked = false;
     usleep(100);

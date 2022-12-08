@@ -14,16 +14,25 @@ public:
   int address = DEFAULT_MPU_ADRESS;
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);
   int16_t two_complement_to_int(uint8_t LSB, uint8_t MSB);
+  void calibrate();
+  void read();
   void run();
-  float *x_gyro;
-  float *y_gyro;
-  float *z_gyro;
-  float *x_accel_g;
-  float *y_accel_g;
-  float *z_accel_g;
   bool running;
 
 private:
+
+  float offset_buffer[6];
+  float *x_gyro_offset = offset_buffer+0;
+  float *y_gyro_offset = offset_buffer+1;
+  float*z_gyro_offset = offset_buffer+2;
+  float *x_acc_offset = offset_buffer+3;
+  float *y_acc_offset = offset_buffer+4;
+  float *z_acc_offset = offset_buffer+5;
+
+  float *buffer;
+  float *x_gyro, *y_gyro, *z_gyro;
+  float *x_accel_g, *y_accel_g, *z_accel_g;
+
   char accel_x_h, accel_x_l, accel_y_h, accel_y_l, accel_z_h, accel_z_l;
   char gyro_x_h, gyro_x_l, gyro_y_h, gyro_y_l, gyro_z_h, gyro_z_l;
   int16_t x_accel = 0;
