@@ -39,6 +39,15 @@ int I2c::write(uint8_t command) {
   return 1;
 }
 
+int I2c::read() {
+  int result = i2c_smbus_read_byte(fd);
+  if (result == -1) {
+    std::cout << "I2C: Failed to read byte from I2c." << std::endl;
+    return -1;
+  }
+  return 1;
+}
+
 int I2c::writeByte(uint8_t command, uint8_t data) {
   int result = i2c_smbus_write_byte_data(fd, command, data);
   if (result == -1) {

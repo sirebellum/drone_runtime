@@ -165,7 +165,7 @@ void IR::run() {
   while (this->running) {
     // Wait for lock on i2c
     while (this->i2c->locked)
-      continue;
+      usleep(100);
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {

@@ -15,7 +15,7 @@
 #include <sstream>
 #include <thread>
 
-#define DEBUG false
+#define DEBUG true
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
     printf("Ax %.3f Ay %.3f  Az %.3f\n", in_data[6], in_data[7], in_data[7]);
     printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(),
            compass.getZ());
+    printf("Altitude raw %f\n", ultra.getAltitude());
     printf("===========================\n");
 #endif
   }

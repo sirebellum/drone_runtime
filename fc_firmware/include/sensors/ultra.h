@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 
 #define DEFAULT_ULTRA_ADRESS 0x70
+#define MAX_RANGE 700 // cm
 
 class ULTRA {
 public:
@@ -18,6 +19,6 @@ public:
 
 private:
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);
-  char upper_byte, lower_byte;
+  unsigned char bytes[2];
   float altitude = -1;
 };
