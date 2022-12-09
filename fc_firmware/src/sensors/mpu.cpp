@@ -122,6 +122,11 @@ void MPU::read() {
   this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
   this->fifo_len = merge_bytes(this->low_byte, this->high_byte);
 
+  // clear if full
+  if (fifo_len >= 1024)
+    this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
+
+  // Wait till there are readings
   while (this->fifo_len <= 0) {
     this->high_byte = this->i2c->readByte(REG_FIFO_COUNT_L);
     this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
