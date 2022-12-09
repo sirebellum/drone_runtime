@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
       new tvm::micro::MicroGraphExecutor(json.str(), mod);
 
   // Set up input buffers
-  float in_data[12] = {-1}; // X Y Z R P Y Wx Wy Wz Ax Ay Az
-  int64_t in_dim[] = {1, 12};
+  float in_data[6] = {-1}; // X Y Z R P Y
+  int64_t in_dim[] = {1, 6};
   _Float16 out_data[4] = {-1};
   int64_t out_dim[] = {1, 4};
   int64_t stride[] = {1, 1};

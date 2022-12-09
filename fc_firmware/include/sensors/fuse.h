@@ -23,7 +23,7 @@ private:
   float* R, *P, *Y;
   float* x, *y, *z;
 
-  float* Ax, *Ay, *Az;
-  float* Wx, *Wy, *Wz;
+  float Ax, Ay, Az;
+  float Wx, Wy, Wz;
 
 };
