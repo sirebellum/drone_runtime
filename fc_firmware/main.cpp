@@ -14,7 +14,7 @@
 #include <sstream>
 #include <thread>
 
-#define DEBUG false
+#define DEBUG true
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 

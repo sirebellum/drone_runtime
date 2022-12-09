@@ -113,25 +113,7 @@ void MPU::calibrate() {
   this->i2c->locked = false;
 }
 
-// TODO: change code to FIFO to improve speed
-// ALSO: change i2c bus speed https://stackoverflow.com/questions/55535848/change-i2c-speed-in-linux
 void MPU::read() {
-
-  // Wait for buffer to have a full set of mpu data
-  this->high_byte = this->i2c->readByte(REG_FIFO_COUNT_L);
-  this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
-  this->fifo_len = merge_bytes(this->low_byte, this->high_byte);
-
-  // clear if full
-  if (fifo_len >= 1024)
-    this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
-
-  // Wait till there are readings
-  while (this->fifo_len <= 0) {
-    this->high_byte = this->i2c->readByte(REG_FIFO_COUNT_L);
-    this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
-    this->fifo_len = merge_bytes(this->low_byte, this->high_byte);
-  }
 
   this->i2c->readBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
 
