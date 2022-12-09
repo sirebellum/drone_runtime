@@ -20,7 +20,7 @@ void ULTRA::run() {
   while (this->running) {
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(100);
+      usleep(1000);
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
@@ -36,7 +36,7 @@ void ULTRA::run() {
 
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(100);
+      usleep(1000);
     this->i2c->locked = true;
 
     // Read

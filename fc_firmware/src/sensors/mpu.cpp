@@ -1,8 +1,12 @@
 #include <fcntl.h>
 #include <sensors/mpu.h>
 #include <unistd.h>
+#include <ctime> 
+#include <chrono>
+
 
 #define REG_CONFIG 0x1A
+#define REG_SIGNAL_RESET 0x68
 #define REG_PWR_MGMT_1 0x6B
 #define REG_INTRPT_MGMT 0x38
 #define REG_INTRPT_STATUS 0x3A
@@ -16,19 +20,14 @@
 #define REG_ACCEL_Y 0x3D
 #define REG_ACCEL_Z 0x3F
 
-MPU::MPU(I2c *i2c_interface, float *buffer) {
-  this->buffer = buffer;
-  this->x_gyro = buffer + 6;
-  this->y_gyro = buffer + 7;
-  this->z_gyro = buffer + 8;
-  this->x_accel_g = buffer + 9;
-  this->y_accel_g = buffer + 10;
-  this->z_accel_g = buffer + 11;
-
+MPU::MPU(I2c *i2c_interface) {
   this->i2c = i2c_interface;
 
   if (this->i2c->addressSet(this->address) == -1)
     printf("Unable to open mpu sensor i2c address...\n");
+
+  // Reset sensors
+  this->i2c->writeByte(REG_SIGNAL_RESET, 0b00000110);
 
   this->i2c->writeByte(REG_PWR_MGMT_1, 0x00);
   this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
@@ -38,7 +37,7 @@ MPU::MPU(I2c *i2c_interface, float *buffer) {
   this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
-  this->i2c->writeByte(REG_CONFIG, 0x05);
+  this->i2c->writeByte(REG_CONFIG, 0x00);
 
   this->running = true;
 }
@@ -79,7 +78,17 @@ void MPU::calibrate() {
     return;
   }
 
+  // Sample for a bit and discard
+  printf("Discarding some bytes... ");
+  for (int s = 0; s < 1024; ++s) {
+    // Wait for mpu data to be ready
+    while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
+      usleep(100);
+    this->read();
+  }
+
   // Sample gyro/acc output and calculate average offset
+  printf("Sampling...\n");
   size_t nsamples = 128;
   float avg;
   float buffer[128];
@@ -90,16 +99,24 @@ void MPU::calibrate() {
       while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
         usleep(100);
       this->read();
-      buffer[s] = this->buffer[axis+6];
+      buffer[s] = this->buffer[axis];
     }
     // get average
     for(int i=0;i<nsamples;++i) {avg+=buffer[i];}
     this->offset_buffer[axis] = avg/nsamples;
   }
+
+  printf("gyro offsets: %0.3f %0.3f %0.3f\n", *x_gyro_offset, *y_gyro_offset, *z_gyro_offset);
+  printf("acc offsets: %0.3f %0.3f %0.3f\n", *x_acc_offset, *y_acc_offset, *z_acc_offset);
+
   this->i2c->locked = false;
 }
 
+// TODO: change code to FIFO to improve speed
+// ALSO: change i2c bus speed https://stackoverflow.com/questions/55535848/change-i2c-speed-in-linux
 void MPU::read() {
+  this->timestamp += 1;
+
   this->gyro_x_h = this->i2c->readByte(REG_GYRO_X);
   this->gyro_x_l = this->i2c->readByte(REG_GYRO_X+1);
   this->gyro_y_h = this->i2c->readByte(REG_GYRO_Y);
@@ -132,17 +149,17 @@ void MPU::run() {
 
     // Wait for mpu data to be ready
     while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
-      usleep(100);
+      usleep(1000);
 
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(100);
+      usleep(1000);
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
       this->i2c->locked = false;
       printf("Unable to open mpu sensor i2c address...\n");
-      usleep(100);
+      usleep(1000);
       continue;
     }
 
@@ -150,6 +167,6 @@ void MPU::run() {
     this->read();
 
     this->i2c->locked = false;
-    usleep(100);
+    usleep(1000);
     }
 }
