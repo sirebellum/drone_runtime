@@ -85,17 +85,11 @@ void MPU::calibrate() {
     return;
   }
 
-  // Sample for a bit and discard
-  printf("Discarding some bytes...");
-  for (int s = 0; s < 1024; ++s) {
-    this->read();
-  }
-
   // Sample gyro/acc output and calculate average offset
   printf("Sampling...\n");
-  size_t nsamples = 128;
+  size_t nsamples = 2048;
   int64_t sum;
-  int16_t buffer[128];
+  int16_t buffer[2048];
   for (size_t axis = 0; axis < 6; ++axis) {
     sum = 0;
     for (size_t s = 0; s < nsamples; ++s) {

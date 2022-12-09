@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 #if DEBUG
     stop = std::chrono::high_resolution_clock::now();
     duration = duration_cast<std::chrono::microseconds>(stop - start);
-    while (duration.count() < 1000000) {
+    while (duration.count() < 100000) {
       stop = std::chrono::high_resolution_clock::now();
       duration = duration_cast<std::chrono::microseconds>(stop - start);
       usleep(1000);
