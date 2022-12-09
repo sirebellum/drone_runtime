@@ -20,27 +20,41 @@ public:
   bool running;
   clock_t timestamp = 0;
 
-  float buffer[6];
-  float *x_gyro = buffer+0;
-  float *y_gyro = buffer+1;
-  float *z_gyro = buffer+2;
-  float *x_accel_g = buffer+3;
-  float *y_accel_g = buffer+4;
-  float *z_accel_g = buffer+5;
+  int16_t buffer[6];
+  int16_t *x_gyro = buffer+0;
+  int16_t *y_gyro = buffer+1;
+  int16_t *z_gyro = buffer+2;
+  int16_t *x_accel_g = buffer+3;
+  int16_t *y_accel_g = buffer+4;
+  int16_t *z_accel_g = buffer+5;
 
 private:
+  unsigned char high_byte, low_byte;
+  unsigned char fifo_buffer[12];
+  uint8_t *accel_x_h = fifo_buffer+0;
+  uint8_t *accel_x_l = fifo_buffer+1;
+  uint8_t *accel_y_h = fifo_buffer+2;
+  uint8_t *accel_y_l = fifo_buffer+3;
+  uint8_t *accel_z_h = fifo_buffer+4;
+  uint8_t *accel_z_l = fifo_buffer+5;
+  uint8_t *gyro_x_h = fifo_buffer+6;
+  uint8_t *gyro_x_l = fifo_buffer+7;
+  uint8_t *gyro_y_h = fifo_buffer+8;
+  uint8_t *gyro_y_l = fifo_buffer+9;
+  uint8_t *gyro_z_h = fifo_buffer+10;
+  uint8_t *gyro_z_l = fifo_buffer+11;
 
-  float offset_buffer[6] = {0};
-  float *x_gyro_offset = offset_buffer+0;
-  float *y_gyro_offset = offset_buffer+1;
-  float* z_gyro_offset = offset_buffer+2;
-  float *x_acc_offset = offset_buffer+3;
-  float *y_acc_offset = offset_buffer+4;
-  float *z_acc_offset = offset_buffer+5;
+  int16_t offset_buffer[6] = {0};
+  int16_t *x_gyro_offset = offset_buffer+0;
+  int16_t *y_gyro_offset = offset_buffer+1;
+  int16_t* z_gyro_offset = offset_buffer+2;
+  int16_t *x_acc_offset = offset_buffer+3;
+  int16_t *y_acc_offset = offset_buffer+4;
+  int16_t *z_acc_offset = offset_buffer+5;
 
-  char accel_x_h, accel_x_l, accel_y_h, accel_y_l, accel_z_h, accel_z_l;
-  char gyro_x_h, gyro_x_l, gyro_y_h, gyro_y_l, gyro_z_h, gyro_z_l;
   int16_t x_accel = 0;
   int16_t y_accel = 0;
   int16_t z_accel = 0;
+
+  uint16_t fifo_len = 0;
 };

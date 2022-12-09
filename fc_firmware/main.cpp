@@ -14,7 +14,7 @@
 #include <sstream>
 #include <thread>
 
-#define DEBUG false
+#define DEBUG true
 
 int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   printf("Loading %s\n", so.c_str());
   tvm::micro::DSOModule *mod = new tvm::micro::DSOModule(so.c_str());
 
-  std::ifstream t("fc.json");
+  std::ifstream t("./fc.json");
   std::stringstream json;
   json << t.rdbuf();
   printf("Init fc graph exec\n");
@@ -63,15 +63,15 @@ int main(int argc, char **argv) {
   SPI spi = SPI();
 
   // Set up GPS
-  printf("Init GPS\n");
+  printf("Init GPS: ");
   GPS gps = GPS();
   std::thread gps_thread(&GPS::run, &gps);
   printf("Home: %.3f %.3f\n", gps.home.latitude, gps.home.longitude);
 
   // Set up acceleromter
-  printf("Init acceleromter\n");
+  printf("Init acceleromter: ");
   MPU mpu = MPU(&i2c);
-  printf("Calibrating...\n");
+  printf("Calibrating...");
   mpu.calibrate();
   std::thread mpu_thread(&MPU::run, &mpu);
 
@@ -145,8 +145,8 @@ int main(int argc, char **argv) {
            out_data[3]);
     printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
     printf("R %.3f  P %.3f  Y %.3f\n", in_data[3], in_data[4], in_data[5]);
-    printf("Wx %.3f Wy %.3f  Wz %.3f\n", *mpu.x_gyro, *mpu.y_gyro, *mpu.z_gyro);
-    printf("Ax %.3f Ay %.3f  Az %.3f\n", *mpu.x_accel_g, *mpu.y_accel_g, *mpu.z_accel_g);
+    printf("Wx %.3f Wy %.3f  Wz %.3f\n", in_data[6], in_data[7], in_data[8]);
+    printf("Ax %.3f Ay %.3f  Az %.3f\n", in_data[9], in_data[10], in_data[11]);
     printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(),
            compass.getZ());
     printf("Altitude raw %f\n", ultra.getAltitude());

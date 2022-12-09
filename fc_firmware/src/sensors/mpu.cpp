@@ -6,6 +6,10 @@
 
 
 #define REG_CONFIG 0x1A
+#define REG_FIFO_CONFIG 0x23
+#define REG_FIFO_DATA 0x74
+#define REG_FIFO_COUNT_L 0x73
+#define REG_FIFO_COUNT_H 0x72
 #define REG_SIGNAL_RESET 0x68
 #define REG_PWR_MGMT_1 0x6B
 #define REG_INTRPT_MGMT 0x38
@@ -29,12 +33,16 @@ MPU::MPU(I2c *i2c_interface) {
   // Reset sensors
   this->i2c->writeByte(REG_SIGNAL_RESET, 0b00000110);
 
+  // Enable fifo
+  this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
+  this->i2c->writeByte(REG_FIFO_CONFIG, 0b01111000);
+
   this->i2c->writeByte(REG_PWR_MGMT_1, 0x00);
   this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeByte(REG_GYRO_CONFIG, 0x00);
 
   // Enable interrupts
-  this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
+  // this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
   this->i2c->writeByte(REG_CONFIG, 0x00);
@@ -66,7 +74,6 @@ uint16_t MPU::merge_bytes(uint8_t LSB, uint8_t MSB) {
 }
 
 void MPU::calibrate() {
-
   // Wait for lock on i2c
   while (this->i2c->locked)
     usleep(100);
@@ -79,35 +86,29 @@ void MPU::calibrate() {
   }
 
   // Sample for a bit and discard
-  printf("Discarding some bytes... ");
+  printf("Discarding some bytes...");
   for (int s = 0; s < 1024; ++s) {
-    // Wait for mpu data to be ready
-    while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
-      usleep(100);
     this->read();
   }
 
   // Sample gyro/acc output and calculate average offset
   printf("Sampling...\n");
   size_t nsamples = 128;
-  float avg;
-  float buffer[128];
-  for (int axis = 0; axis < 6; ++axis) {
-    avg = 0;
-    for (int s = 0; s < nsamples; ++s) {
-      // Wait for mpu data to be ready
-      while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
-        usleep(100);
+  int64_t sum;
+  int16_t buffer[128];
+  for (size_t axis = 0; axis < 6; ++axis) {
+    sum = 0;
+    for (size_t s = 0; s < nsamples; ++s) {
       this->read();
       buffer[s] = this->buffer[axis];
     }
     // get average
-    for(int i=0;i<nsamples;++i) {avg+=buffer[i];}
-    this->offset_buffer[axis] = avg/nsamples;
+    for(size_t i=0;i<nsamples;++i) {sum+=buffer[i];}
+    this->offset_buffer[axis] = sum/nsamples;
   }
 
-  printf("gyro offsets: %0.3f %0.3f %0.3f\n", *x_gyro_offset, *y_gyro_offset, *z_gyro_offset);
-  printf("acc offsets: %0.3f %0.3f %0.3f\n", *x_acc_offset, *y_acc_offset, *z_acc_offset);
+  printf("gyro offsets: %d %d %d\n", *x_gyro_offset, *y_gyro_offset, *z_gyro_offset);
+  printf("acc offsets: %d %d %d\n", *x_acc_offset, *y_acc_offset, *z_acc_offset);
 
   this->i2c->locked = false;
 }
@@ -115,51 +116,51 @@ void MPU::calibrate() {
 // TODO: change code to FIFO to improve speed
 // ALSO: change i2c bus speed https://stackoverflow.com/questions/55535848/change-i2c-speed-in-linux
 void MPU::read() {
+
+  // Wait for buffer to have a full set of mpu data
+  this->high_byte = this->i2c->readByte(REG_FIFO_COUNT_L);
+  this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
+  this->fifo_len = merge_bytes(this->low_byte, this->high_byte);
+
+  while (this->fifo_len <= 0) {
+    this->high_byte = this->i2c->readByte(REG_FIFO_COUNT_L);
+    this->low_byte = this->i2c->readByte(REG_FIFO_COUNT_H);
+    this->fifo_len = merge_bytes(this->low_byte, this->high_byte);
+  }
+
+  this->i2c->readBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
+
+  *this->x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
+  *this->y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
+  *this->z_gyro = two_complement_to_int(*gyro_z_h, *gyro_z_l) - *z_gyro_offset;
+
+  this->x_accel = two_complement_to_int(*accel_x_h, *accel_x_l);
+  this->y_accel = two_complement_to_int(*accel_y_h, *accel_y_l);
+  this->z_accel = two_complement_to_int(*accel_z_h, *accel_z_l);
+
+  *this->x_accel_g = x_accel - *x_acc_offset;
+  *this->y_accel_g = y_accel - *y_acc_offset;
+  *this->z_accel_g = z_accel - *z_acc_offset;
+  
   this->timestamp += 1;
-
-  this->gyro_x_h = this->i2c->readByte(REG_GYRO_X);
-  this->gyro_x_l = this->i2c->readByte(REG_GYRO_X+1);
-  this->gyro_y_h = this->i2c->readByte(REG_GYRO_Y);
-  this->gyro_y_l = this->i2c->readByte(REG_GYRO_Y+1);
-  this->gyro_z_h = this->i2c->readByte(REG_GYRO_Z);
-  this->gyro_z_l = this->i2c->readByte(REG_GYRO_Z+1);
-
-  this->accel_x_h = this->i2c->readByte(REG_ACCEL_X);
-  this->accel_x_l = this->i2c->readByte(REG_ACCEL_X+1);
-  this->accel_y_h = this->i2c->readByte(REG_ACCEL_Y);
-  this->accel_y_l = this->i2c->readByte(REG_ACCEL_Y+1);
-  this->accel_z_h = this->i2c->readByte(REG_ACCEL_Z);
-  this->accel_z_l = this->i2c->readByte(REG_ACCEL_Z+1);
-
-  *this->x_gyro = ((float)two_complement_to_int(this->gyro_x_h, this->gyro_x_l) / 262) / 250 - *this->x_gyro_offset; // Normalize to range of [-250,250] and then to [-1,1]
-  *this->y_gyro = ((float)two_complement_to_int(this->gyro_y_h, this->gyro_y_l) / 262) / 250 - *this->y_gyro_offset; // rad/s
-  *this->z_gyro = ((float)two_complement_to_int(this->gyro_z_h, this->gyro_z_l) / 262) / 250 - *this->z_gyro_offset;
-
-  this->x_accel = two_complement_to_int(this->accel_x_h, this->accel_x_l);
-  this->y_accel = two_complement_to_int(this->accel_y_h, this->accel_y_l);
-  this->z_accel = two_complement_to_int(this->accel_z_h, this->accel_z_l);
-
-  *this->x_accel_g = ((float)this->x_accel / 16384) / 2 - *this->x_acc_offset; // Normalize to range of [-2,2] and then to [-1,1]
-  *this->y_accel_g = ((float)this->y_accel / 16384) / 2 - *this->y_acc_offset; // m/s^2
-  *this->z_accel_g = ((float)this->z_accel / 16384) / 2 - *this->z_acc_offset;
 }
 
 void MPU::run() {
+  // auto start = std::chrono::high_resolution_clock::now();
+  // auto stop = std::chrono::high_resolution_clock::now();
+  // auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
-
-    // Wait for mpu data to be ready
-    while (!(this->i2c->readByte(REG_INTRPT_STATUS) & 0x01))
-      usleep(1000);
+    // start = std::chrono::high_resolution_clock::now();
 
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(1000);
+      usleep(100);
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
       this->i2c->locked = false;
       printf("Unable to open mpu sensor i2c address...\n");
-      usleep(1000);
+      usleep(100);
       continue;
     }
 
@@ -167,6 +168,10 @@ void MPU::run() {
     this->read();
 
     this->i2c->locked = false;
-    usleep(1000);
+    usleep(100);
+
+    // stop = std::chrono::high_resolution_clock::now();
+    // duration = duration_cast<std::chrono::microseconds>(stop - start);
+    // std::cout << duration.count() << "us\n";
     }
 }

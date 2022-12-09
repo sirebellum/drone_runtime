@@ -7,7 +7,6 @@
 #include <sensors/mpu.h>
 #include <sensors/gps.h>
 #include <sensors/ultra.h>
-#include <Fusion/Fusion.h>
 
 class FUSE {
 public:

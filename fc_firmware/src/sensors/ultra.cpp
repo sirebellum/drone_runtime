@@ -20,12 +20,12 @@ void ULTRA::run() {
   while (this->running) {
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(1000);
+      usleep(100);
     this->i2c->locked = true;
 
     if (this->i2c->addressSet(this->address) == -1) {
       printf("Unable to set ultrasonic sensor i2c address...\n");
-      usleep(1000);
+      usleep(100);
       continue;
     }
 
@@ -36,14 +36,14 @@ void ULTRA::run() {
 
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(1000);
+      usleep(100);
     this->i2c->locked = true;
 
     // Read
     if (this->i2c->addressSet(this->address) == -1) {
       this->i2c->locked = false;
       printf("Unable to set ultrasonic sensor i2c address...\n");
-      usleep(1000);
+      usleep(100);
       continue;
     }
     this->i2c->readBlock(0, 2, this->bytes);
