@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <sensors/compass.h>
 #include <unistd.h>
+#include <chrono>
 
 #define HOVER_HEIGHT 300 // cm
 #define COMPASS_MODE_R 0x02
@@ -34,7 +35,12 @@ float COMPASS::getY() { return this->y; }
 float COMPASS::getZ() { return this->z; }
 
 void COMPASS::run() {
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
+    start = std::chrono::high_resolution_clock::now();
+    
     // Wait for lock on i2c
     while (this->i2c->locked)
       continue;
@@ -64,6 +70,14 @@ void COMPASS::run() {
         (float)this->merge_bytes(this->lower_byte, this->upper_byte) / 65535;
 
     this->i2c->locked = false;
-    usleep(100);
+
+    // Keep in time (120Hz)
+    stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(stop - start);
+    while (duration.count() < 8333) {
+      stop = std::chrono::high_resolution_clock::now();
+      duration = duration_cast<std::chrono::microseconds>(stop - start);
+      usleep(10);
+    }
   }
 }

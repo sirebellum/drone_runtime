@@ -145,8 +145,8 @@ int main(int argc, char **argv) {
            out_data[3]);
     printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
     printf("R %.3f  P %.3f  Y %.3f\n", in_data[3], in_data[4], in_data[5]);
-    printf("Wx %.3f Wy %.3f  Wz %.3f\n", in_data[6], in_data[7], in_data[8]);
-    printf("Ax %.3f Ay %.3f  Az %.3f\n", in_data[9], in_data[10], in_data[11]);
+    printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.Wx, fuse.Wy, fuse.Wz);
+    printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.Ax, fuse.Ay, fuse.Az);
     printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(),
            compass.getZ());
     printf("Altitude raw %f\n", ultra.getAltitude());

@@ -7,6 +7,7 @@
 #include <sensors/mpu.h>
 #include <sensors/gps.h>
 #include <sensors/ultra.h>
+#include <sensors/fuse/NXPfusion.h>
 
 class FUSE {
 public:
@@ -16,14 +17,19 @@ public:
   GPS* gps;
   ULTRA* ultra;
   COMPASS* compass;
+
+  NXPSensorFusion ahrs;
+
   void run();
   bool running;
 
-private:
+  // TODO make private
   float* R, *P, *Y;
   float* x, *y, *z;
-
   float Ax, Ay, Az;
   float Wx, Wy, Wz;
+
+private:
+
 
 };

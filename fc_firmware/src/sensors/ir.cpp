@@ -1,5 +1,6 @@
 #include <sensors/ir.h>
 #include <unistd.h>
+#include <chrono>
 
 /*!
  *    @brief  Instantiates a new MLX90640 class
@@ -162,7 +163,12 @@ int IR::getFrame() {
 }
 
 void IR::run() {
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
+    start = std::chrono::high_resolution_clock::now();
+    
     // Wait for lock on i2c
     while (this->i2c->locked)
       usleep(100);
@@ -178,6 +184,14 @@ void IR::run() {
     this->getFrame();
 
     this->i2c->locked = false;
-    usleep(1000);
+
+    // Keep in time (120Hz)
+    stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(stop - start);
+    while (duration.count() < 8333) {
+      stop = std::chrono::high_resolution_clock::now();
+      duration = duration_cast<std::chrono::microseconds>(stop - start);
+      usleep(10);
+    }
   }
 }

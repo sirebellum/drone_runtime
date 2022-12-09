@@ -45,7 +45,7 @@ MPU::MPU(I2c *i2c_interface) {
   // this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
-  this->i2c->writeByte(REG_CONFIG, 0x00);
+  this->i2c->writeByte(REG_CONFIG, 0x02);
 
   this->running = true;
 }
@@ -127,11 +127,11 @@ void MPU::read() {
 }
 
 void MPU::run() {
-  // auto start = std::chrono::high_resolution_clock::now();
-  // auto stop = std::chrono::high_resolution_clock::now();
-  // auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
-    // start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::high_resolution_clock::now();
 
     // Wait for lock on i2c
     while (this->i2c->locked)
@@ -149,10 +149,15 @@ void MPU::run() {
     this->read();
 
     this->i2c->locked = false;
-    usleep(100);
 
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = duration_cast<std::chrono::microseconds>(stop - start);
+    // Keep in time (120Hz)
+    stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(stop - start);
+    while (duration.count() < 8333) {
+      stop = std::chrono::high_resolution_clock::now();
+      duration = duration_cast<std::chrono::microseconds>(stop - start);
+      usleep(10);
+    }
     // std::cout << duration.count() << "us\n";
     }
 }
