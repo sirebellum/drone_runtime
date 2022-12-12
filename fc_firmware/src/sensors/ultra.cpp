@@ -30,7 +30,7 @@ void ULTRA::run() {
     }
 
     // Initiate reading
-    this->i2c->write(81);
+    this->i2c->writeByte(81, 1);
     this->i2c->locked = false;
     usleep(80000);
 

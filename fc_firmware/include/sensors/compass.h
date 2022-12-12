@@ -13,13 +13,13 @@ public:
   I2c *i2c;
   int address = DEFAULT_COMPASS_ADDRESS;
   void run();
-  float getX();
-  float getY();
-  float getZ();
+  float getX() {return (float)this->x/65535;}
+  float getY() {return (float)this->y/65535;}
+  float getZ() {return (float)this->z/65535;}
   bool running;
 
 private:
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);
   char upper_byte, lower_byte;
-  float x, y, z = -1;
+  uint16_t x, y, z = -1;
 };

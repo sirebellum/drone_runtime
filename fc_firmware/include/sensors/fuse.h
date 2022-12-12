@@ -18,18 +18,37 @@ public:
   ULTRA* ultra;
   COMPASS* compass;
 
-  NXPSensorFusion ahrs;
-
   void run();
   bool running;
 
-  // TODO make private
-  float* R, *P, *Y;
-  float* x, *y, *z;
-  float Ax, Ay, Az;
-  float Wx, Wy, Wz;
+  float getX() {return *x;}
+  float getY() {return *y;}
+  float getZ() {return *z;}
+  float getRoll() {return *R;}
+  float getPitch() {return *P;}
+  float getYaw() {return *Y;}
+  float getVx() {return *Vx;}
+  float getVy() {return *Vy;}
+  float getVz() {return *Vz;}
+
+  float getWx() {return Wx;}
+  float getWy() {return Wy;}
+  float getWz() {return Wz;}
+  float getAx() {return Ax;}
+  float getAy() {return Ay;}
+  float getAz() {return Az;}
 
 private:
+  NXPSensorFusion ahrs;
 
+  // Output values
+  float* x, *y, *z;
+  float* R, *P, *Y;
+  float* Vx, *Vy, *Vz;
+
+  // Local values
+  float Ax, Ay, Az;
+  float Wx, Wy, Wz;
+  float Gx, Gy, Gz;
 
 };

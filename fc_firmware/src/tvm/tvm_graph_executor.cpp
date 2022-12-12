@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include <microtvm_graph_executor.h>
+#include <tvm/microtvm_graph_executor.h>
 
 #include <dlfcn.h>
 
@@ -240,8 +240,10 @@ void *DSOModule::GetSymbol(const char *name) const {
 }
 
 MicroGraphExecutor::MicroGraphExecutor(const std::string &graph_json,
-                                       DSOModule *module) {
+                                       DSOModule *module,
+                                       DLDevice kdevice) {
   assert(module);
+  device_ = kdevice;
   module_ = module;
   picojson::value v;
   picojson::parse(v, graph_json);
@@ -335,7 +337,7 @@ void MicroGraphExecutor::SetupStorage() {
     DynArray<int64_t> shape(1);
     shape[0] = static_cast<int64_t>(pit.size + 3) / 4;
     storage_pool_[i] =
-        NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, device_);
+        NDArray::Empty(shape, vtype[i], device_);
   }
 
   // Assign the pooled entries. A unified memory pool is used to simplify
@@ -412,14 +414,14 @@ void MicroGraphExecutor::SetupOpExecs() {
     const auto &inode = nodes_[nid];
     if (inode.op_type == "null")
       continue;
-    DynArray<DLTensor> args(inode.inputs.size() + inode.param.num_outputs);
-    for (size_t i = 0; i < inode.inputs.size(); ++i) {
+    DynArray<DLTensor> args(inode.param.num_inputs + inode.param.num_outputs);
+    for (size_t i = 0; i < inode.param.num_inputs; ++i) {
       const auto &e = inode.inputs[i];
       args[i] = data_entry_[this->entry_id(e)].ToDLTensor();
     }
     for (size_t index = 0; index < inode.param.num_outputs; ++index) {
       uint32_t eid = this->entry_id(nid, index);
-      args[index + inode.inputs.size()] = data_entry_[eid].ToDLTensor();
+      args[index + inode.param.num_inputs] = data_entry_[eid].ToDLTensor();
     }
     assert(inode.op_type == "tvm_op");
     op_execs_[nid] = CreateTVMOp(*module_, inode.param, args);

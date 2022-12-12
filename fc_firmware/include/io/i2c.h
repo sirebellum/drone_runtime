@@ -4,7 +4,6 @@
 #undef I2c
 #endif
 
-#include <iostream>
 #include <linux/types.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
@@ -13,23 +12,15 @@
 
 class I2c {
 public:
-  I2c(const char *deviceName);
+  I2c(int fd);
   ~I2c();
-  void setup(const char *deviceName);
   int addressSet(uint8_t address);
-  int write(uint8_t command);
   int read();
   int writeByte(uint8_t command, uint8_t data);
-  int writeBlockData(uint8_t command, uint8_t size, __u8 *data);
-  uint16_t readByte(uint8_t command);
-  uint16_t tryReadByte(uint8_t command);
-  uint16_t readBlock(uint8_t command, uint8_t size, uint8_t *data);
-  uint16_t tryReadByte(uint8_t address, uint8_t command) {
-    addressSet(address);
-    return tryReadByte(command);
-  }
-  uint16_t readTimeout = I2C_DEFAULT_READ_TIMEOUT;
+  uint8_t readByte(__u8 command);
+  int readBlock(__u8 command, uint8_t size, __u8 *data);
   bool locked = false;
+  uint8_t slave_sel;
 
 private:
   int fd;

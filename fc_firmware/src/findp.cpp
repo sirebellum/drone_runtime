@@ -5,15 +5,14 @@
 #include <sstream>
 #include <string>
 #include <unistd.h>
-
 #include <findp.h>
 
-FINDP::FINDP(SPI *spi, float *ir_image) {
+#define CMD_GET_IMAGE 69
+
+FINDP::FINDP(SPI *spi) {
   this->spi = spi;
 
-  this->ir_image = ir_image;
-
-  hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+  // hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
 
   // Start
   this->running = true;
@@ -40,46 +39,42 @@ void FINDP::run() {
 
   // Set up vars
   uint32_t image_size;
-  unsigned char *image;
+  unsigned char image[BUFF_SIZE] = {69};
   cv::Mat image_mat;
 
   // People detection
-  std::vector<cv::Point> track;
   std::vector<cv::Rect> found;
   std::vector<double> weights;
   bool detected = false;
 
-  // Notification packet
-  SPI_PACKET *notify = new SPI_PACKET{-1, -1, 0};
-
   while (this->running) {
 
-    // Receive picture
-    image_size = this->spi->shipmentReceive(image);
+    spi->rwBlock(BUFF_SIZE, CMD_GET_IMAGE, image);
+    printf("%u\n", image[0]);
 
     // Decode image
-    image_mat = cv::imdecode((cv::InputArray)image, cv::IMREAD_GRAYSCALE);
+    // image_mat = cv::imdecode((cv::InputArray)image, cv::IMREAD_GRAYSCALE);
 
-    // Run model
-    this->hog.detectMultiScale(image_mat, found, weights);
+    // // Run model
+    // this->hog.detectMultiScale(image_mat, found, weights);
 
-    // Check for detections
-    for (size_t i = 0; i < found.size(); i++) {
-      if (weights[i] >= 0.5) {
-        printf("Detected!\n");
-        this->spi->packetReadWrite(notify);
-        detected = true;
-      }
-    }
+    // // Check for detections
+    // for (size_t i = 0; i < found.size(); i++) {
+    //   if (weights[i] >= 0.5) {
+    //     printf("Detected!\n");
+    //     this->spi->packetReadWrite(notify);
+    //     detected = true;
+    //   }
+    // }
 
-    // Save image to disk and delete from memory
-    this->archiveImage(&image_mat, detected);
-    detected = false;
-    delete (image);
+    // // Save image to disk and delete from memory
+    // this->archiveImage(&image_mat, detected);
+    // detected = false;
+    // delete (image);
 
-    // Thermal camera time
-    image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_32F, this->ir_image);
-    this->archiveImage(&image_mat, false);
+    // // Thermal camera time
+    // image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_32F, this->ir_image);
+    // this->archiveImage(&image_mat, false);
 
     sleep(1);
   }

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <sensors/gps.h>
 #include <unistd.h>
+#include <chrono>
 
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {"n/a", "None", "2D", "3D"};
@@ -12,7 +13,7 @@ GPS::GPS() {
   (void)gps_stream(&this->gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
   // Set home
-  while (gps_waiting(&this->gps_data, 5000000)) {
+  while (gps_waiting(&this->gps_data, 500000)) {
     if (-1 == gps_read(&this->gps_data, NULL, 0)) {
       printf("GPS read error.  Bye, bye\n");
       this->running = false;
@@ -59,6 +60,9 @@ float GPS::getLongitude() {
 }
 
 void GPS::run() {
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
     while (gps_waiting(&this->gps_data, 5000000)) {
       if (-1 == gps_read(&this->gps_data, NULL, 0)) {
@@ -93,7 +97,16 @@ void GPS::run() {
       // } else {
       // printf("Lat n/a Lon n/a\n");
       // }
-      usleep(1000);
+
+    // Keep in time (120Hz)
+    stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(stop - start);
+    while (duration.count() < 8333) {
+      stop = std::chrono::high_resolution_clock::now();
+      duration = duration_cast<std::chrono::microseconds>(stop - start);
+      usleep(10);
+    }
+    // std::cout << duration.count() << "us gps\n";
     }
   }
 }

@@ -30,10 +30,6 @@ uint16_t COMPASS::merge_bytes(uint8_t LSB, uint8_t MSB) {
   return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
 }
 
-float COMPASS::getX() { return this->x; }
-float COMPASS::getY() { return this->y; }
-float COMPASS::getZ() { return this->z; }
-
 void COMPASS::run() {
   auto start = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
@@ -56,18 +52,15 @@ void COMPASS::run() {
     // Read for all 3 axes
     this->upper_byte = this->i2c->readByte(OUTPUT_X_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_X_LSB_R);
-    this->x =
-        (float)this->merge_bytes(this->lower_byte, this->upper_byte) / 65535;
+    this->x = this->merge_bytes(this->lower_byte, this->upper_byte);
 
     this->upper_byte = this->i2c->readByte(OUTPUT_Y_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_Y_LSB_R);
-    this->y =
-        (float)this->merge_bytes(this->lower_byte, this->upper_byte) / 65535;
+    this->y = this->merge_bytes(this->lower_byte, this->upper_byte);
 
     this->upper_byte = this->i2c->readByte(OUTPUT_Z_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_Z_LSB_R);
-    this->z =
-        (float)this->merge_bytes(this->lower_byte, this->upper_byte) / 65535;
+    this->z = this->merge_bytes(this->lower_byte, this->upper_byte);
 
     this->i2c->locked = false;
 
@@ -79,5 +72,6 @@ void COMPASS::run() {
       duration = duration_cast<std::chrono::microseconds>(stop - start);
       usleep(10);
     }
+    // std::cout << duration.count() << "us compass\n";
   }
 }

@@ -31,7 +31,7 @@
 #include <utility>
 #include <vector>
 
-#include <microtvm_runtime_api.h>
+#include <tvm/microtvm_runtime_api.h>
 #include <minimal_vector.h>
 
 namespace tvm {
@@ -122,7 +122,7 @@ private:
 class MicroGraphExecutor {
 public:
   // Construct a GraphExecutor with the given graph and DSOModule.
-  MicroGraphExecutor(const std::string &graph_json, DSOModule *module);
+  MicroGraphExecutor(const std::string &graph_json, DSOModule *module, DLDevice kdevice = {kDLCPU, 0});
   ~MicroGraphExecutor();
   // Run the graph
   void Run();
@@ -157,7 +157,7 @@ private:
   // Additional graph attributes
   GraphAttr attrs_;
   // Execution device
-  DLDevice device_{kDLCPU, 0};
+  DLDevice device_;
 
   // Common storage pool
   DynArray<NDArray> storage_pool_;

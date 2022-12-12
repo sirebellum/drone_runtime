@@ -4,7 +4,7 @@
 #ifndef DShot_h
 #define DShot_h
 
-#define OP_FREQ 150
+#define OP_FREQ 120
 #define OP_PERIOD_us 1000000/OP_FREQ
 
 class DShot {

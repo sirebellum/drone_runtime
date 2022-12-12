@@ -1,64 +1,40 @@
-#include <fcntl.h>
 #include <io/i2c.h>
-#include <io/smbus.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
-#include <unistd.h>
+#include <iostream>
+#include <cstring>
 
-I2c::I2c(const char *deviceName) {
-  fd = open(deviceName, O_RDWR);
-  if (fd == -1) {
-    std::cout << "I2C: Failed to open I2c device!" << std::endl;
-  }
+I2c::I2c(int fd) {
+  this->fd = fd;
 }
 
-I2c::~I2c() { close(fd); }
-
-void I2c::setup(const char *deviceName) {
-  fd = open(deviceName, O_RDWR);
-  if (fd == -1) {
-    std::cout << "I2C: Failed to open I2c device!" << std::endl;
-  }
-}
+I2c::~I2c() {}
 
 int I2c::addressSet(uint8_t address) {
-  int result = ioctl(fd, I2C_SLAVE, address);
-  if (result == -1) {
-    std::cout << "I2C: Failed to set address." << std::endl;
-    return -1;
-  }
-  return 1;
-}
-
-int I2c::write(uint8_t command) {
-  int result = i2c_smbus_write_byte(fd, command);
-  if (result == -1) {
-    std::cout << "I2C: Failed to write byte to I2c." << std::endl;
-    return -1;
-  }
-  return 1;
-}
-
-int I2c::read() {
-  int result = i2c_smbus_read_byte(fd);
-  if (result == -1) {
-    std::cout << "I2C: Failed to read byte from I2c." << std::endl;
-    return -1;
-  }
-  return 1;
-}
-
-int I2c::writeByte(uint8_t command, uint8_t data) {
-  int result = i2c_smbus_write_byte_data(fd, command, data);
-  if (result == -1) {
-    std::cout << "I2C: Failed to write byte to I2c." << std::endl;
-    return -1;
-  }
+  this->slave_sel = address;
   return 0;
 }
 
-int I2c::writeBlockData(uint8_t command, uint8_t size, __u8 *data) {
-  int result = i2c_smbus_write_i2c_block_data(fd, command, size, data);
+// TODO check to make sure protocol is correct
+// TODO get spidev to show up
+int I2c::writeByte(uint8_t command, __u8 data) {
+    uint8_t outbuf[2];
+
+    struct i2c_msg msgs[1];
+    struct i2c_rdwr_ioctl_data msgset[1];
+
+    outbuf[0] = command;
+    outbuf[1] = data;
+
+    msgs[0].addr = this->slave_sel;
+    msgs[0].flags = 0;
+    msgs[0].len = 2;
+    msgs[0].buf = outbuf;
+
+    msgset[0].msgs = msgs;
+    msgset[0].nmsgs = 1;
+
+  int result = ioctl(fd, I2C_RDWR, &msgset);
   if (result == -1) {
     std::cout << "I2C: Failed to write block data byte to I2c." << std::endl;
     return -1;
@@ -66,22 +42,34 @@ int I2c::writeBlockData(uint8_t command, uint8_t size, __u8 *data) {
   return 1;
 }
 
-uint16_t I2c::readByte(uint8_t command) {
-  int result = i2c_smbus_read_byte_data(fd, command);
-  if (result == -1) {
-    std::cout << "I2C: Failed to read byte from I2c." << std::endl;
-  }
-  return result;
+uint8_t I2c::readByte(__u8 command) {
+  uint8_t output;
+  readBlock(command, 1, &output);
+  return output;
 }
 
-uint16_t I2c::tryReadByte(uint8_t command) {
-  return i2c_smbus_read_byte_data(fd, command);
-}
+int I2c::readBlock(__u8 command, uint8_t size, __u8 *data) {
 
-uint16_t I2c::readBlock(uint8_t command, uint8_t size, uint8_t *data) {
-  int result = i2c_smbus_read_i2c_block_data(fd, command, size, data);
+  struct i2c_msg msgs[2];
+  struct i2c_rdwr_ioctl_data msgset;
+
+  msgs[0].addr = this->slave_sel;
+  msgs[0].flags = 0;
+  msgs[0].len = 1;
+  msgs[0].buf = &command;
+
+  memset(data, 0, size);
+  msgs[1].addr = this->slave_sel;
+  msgs[1].flags = I2C_M_RD;
+  msgs[1].len = size;
+  msgs[1].buf = data;
+
+  msgset.msgs = msgs;
+  msgset.nmsgs = 2;
+
+  int result = ioctl(fd, I2C_RDWR, &msgset);
   if (result != size) {
-    std::cout << "I2C: Failed to read block from I2c." << std::endl;
+    // std::cout << "I2C: Failed to read block from I2c." << std::endl;
     return -1;
   }
   return 0;

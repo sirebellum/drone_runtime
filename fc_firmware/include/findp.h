@@ -9,10 +9,11 @@
 #define IMAGE_CAM_Y 480
 #define IMAGE_IR_X 32
 #define IMAGE_IR_Y 24
+#define BUFF_SIZE 1
 
 class FINDP {
 public:
-  FINDP(SPI *spi, float *ir_image);
+  FINDP(SPI *spi);
   ~FINDP();
   SPI *spi;
   void run();
@@ -21,5 +22,4 @@ public:
 
 private:
   cv::HOGDescriptor hog;
-  float *ir_image;
 };

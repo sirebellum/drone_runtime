@@ -19,6 +19,9 @@ FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
   this->R = buffer+3;
   this->P = buffer+4;
   this->Y = buffer+5;
+  this->Vx = buffer+6;
+  this->Vy = buffer+7;
+  this->Vz = buffer+8;
 
   // Set up AHRS
   ahrs.begin();
@@ -35,17 +38,23 @@ void FUSE::run() {
   while (this->running) {
     start = std::chrono::high_resolution_clock::now();
 
-    this->Wx = (float)*this->mpu->x_gyro/262;
-    this->Wy = (float)*this->mpu->y_gyro/262;
-    this->Wz = (float)*this->mpu->z_gyro/262;
-    this->Ax = (float)*this->mpu->x_accel_g/16384;
-    this->Ay = (float)*this->mpu->y_accel_g/16384;
-    this->Az = (float)*this->mpu->z_accel_g/16384;
+    // Set internal values
+    this->Wx = this->mpu->getGyroX();
+    this->Wy = this->mpu->getGyroY();
+    this->Wz = this->mpu->getGyroZ();
+    this->Ax = this->mpu->getAccX();
+    this->Ay = this->mpu->getAccY();
+    this->Az = this->mpu->getAccZ();
+    this->Gx = this->compass->getX();
+    this->Gy = this->compass->getY();
+    this->Gz = this->compass->getZ();
 
+    // Update flight model
     ahrs.update(Wx, Wy, Wz,
                 Ax, Ay, Az,
-                compass->getX(), compass->getY(), compass->getZ());
+                Gx, Gy, Gz);
 
+    // Set outputs
     *this->R = ahrs.getRoll();
     *this->P = ahrs.getPitch();
     *this->Y = ahrs.getYaw();
@@ -54,6 +63,9 @@ void FUSE::run() {
     *this->x = 0;
     *this->y = 0;
     *this->z = 0.5;
+    *this->Vx = 0;
+    *this->Vy = 0;
+    *this->Vz = 0;
 
     // Keep in time (120Hz)
     stop = std::chrono::high_resolution_clock::now();
@@ -63,6 +75,6 @@ void FUSE::run() {
       duration = duration_cast<std::chrono::microseconds>(stop - start);
       usleep(10);
     }
-    // std::cout << duration.count() << "us\n";
+    // std::cout << duration.count() << "us fuse\n";
   }
 }

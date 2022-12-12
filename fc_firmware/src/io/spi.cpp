@@ -1,50 +1,37 @@
 #include <fcntl.h>
-#include <io/smbus.h>
 #include <io/spi.h>
+#include <linux/spi/spidev.h>
 #include <unistd.h>
+#include <iostream>
+#include <cstring>
 
-#define SPI_CHANNEL 0
-#define SPI_CLOCK_SPEED 1000000
+#define BITS_PER_WORD 8
+#define SPI_SPEED 1000000
+#define BITS_PER_WORD 8
 
-SPI::SPI() {
-  this->fd = wiringPiSPISetupMode(SPI_CHANNEL, SPI_CLOCK_SPEED, 0);
-  if (this->fd == -1) {
+SPI::SPI(const char *deviceName) {
+  fd = open(deviceName, O_RDWR);
+  if (fd == -1) {
     std::cout << "SPI: Failed to open SPI device!" << std::endl;
   }
-  this->packet = (unsigned char *)new SPI_PACKET{0, 0, 0};
 }
 
-SPI::~SPI() { close(this->fd); }
+SPI::~SPI() { close(fd); }
 
-void SPI::packetReadWrite() {
-  wiringPiSPIDataRW(SPI_CHANNEL, this->packet, PACKET_SIZE);
-}
-
-void SPI::packetReadWrite(SPI_PACKET *packet) {
-  wiringPiSPIDataRW(SPI_CHANNEL, (unsigned char *)packet, PACKET_SIZE);
-}
-
-uint32_t SPI::shipmentReceive(unsigned char *shipment) {
-
-  // Receiving and handling
-  this->packetReadWrite();
-  SPI_PACKET *packet = (SPI_PACKET *)this->packet;
-  int32_t len = packet->len;
-  int32_t idx = packet->idx;
-
-  while (packet->idx != 1) // Not the first packet
-    this->packetReadWrite();
-  idx = packet->idx;
-  len = packet->len;
-
-  // Setup buffer for shipment
-  shipment = new unsigned char(len * BUFFER_SIZE);
-
-  while (idx <= len) {
-    wmemcpy((wchar_t *)&shipment[(idx - 1) * BUFFER_SIZE],
-            (wchar_t *)packet->buffer, BUFFER_SIZE);
-    this->packetReadWrite();
-    idx = packet->idx;
+int SPI::rwBlock(uint8_t size, unsigned char cmd, uint8_t *data) {
+  uint8_t* spiBufTx = new uint8_t[size];
+  struct spi_ioc_transfer spi;
+  spiBufTx[0] = cmd;
+  spi.tx_buf =(unsigned long)spiBufTx;
+  spi.rx_buf = (unsigned long)data;
+  spi.len = size;
+  spi.delay_usecs = 0;
+  spi.speed_hz = SPI_SPEED;
+  spi.bits_per_word = BITS_PER_WORD;
+  int result = ioctl(fd, SPI_IOC_MESSAGE(1), &spi);
+  if (result == -1) {
+    std::cout << "SPI: Failed to write block data to SPI." << std::endl;
+    return -1;
   }
-  return len * BUFFER_SIZE;
+  return 1;
 }

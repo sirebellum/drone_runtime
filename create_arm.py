@@ -12,21 +12,22 @@ print("Compiling flight controller...")
 model_path = "fc.onnx"
 onnx_model = onnx.load(model_path)
 
-target = tvm.target.arm_cpu(options=["-mattr=+neon",
-                                     "-mcpu=cortex-a53",
-                                     "-mtriple=aarch64-linux-gnueabihf"])
+target = tvm.target.arm_cpu(options=["-mattr=+neon,+vfp4",
+                                     "-mcpu=cortex-a7",
+                                     "-mtriple=armv7a-linux-gnueabihf"])
 
 input_name = "input"
-shape_dict = {input_name: (1, 6)}
+shape_dict = {input_name: (1, 6*6)}
 mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
-mod = ToMixedPrecision("float16")(mod)
+# mod = ToMixedPrecision("float16")(mod)
 
-with tvm.transform.PassContext(opt_level=3):
+with tvm.transform.PassContext(opt_level=2):
     mod = relay.build(mod, target=target)
     with open("fc_firmware/fc.json", "w") as json:
         json.write(mod.get_graph_json())
     mod.export_library("fc_firmware/fc.so", options=["-fuse-ld=lld",
-                                                     "--target=aarch64-linux-gnueabihf"])
+                                                     "--target=armv7a-linux-gnueabihf",
+                                                     "-fno-short-wchar"])
 
 # People detection
 # print("Compiling people detection...")
