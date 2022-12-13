@@ -21,13 +21,12 @@ shape_dict = {input_name: (1, 6*6)}
 mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
 # mod = ToMixedPrecision("float16")(mod)
 
-with tvm.transform.PassContext(opt_level=2):
+with tvm.transform.PassContext(opt_level=3):
     mod = relay.build(mod, target=target)
     with open("fc_firmware/fc.json", "w") as json:
         json.write(mod.get_graph_json())
     mod.export_library("fc_firmware/fc.so", options=["-fuse-ld=lld",
-                                                     "--target=armv7a-linux-gnueabihf",
-                                                     "-fno-short-wchar"])
+                                                     "--target=armv7a-linux-gnueabihf"])
 
 # People detection
 # print("Compiling people detection...")

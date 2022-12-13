@@ -95,6 +95,9 @@ struct Node {
 class NDArray {
 public:
   // initialize NDArray with shape/dtype/device
+  NDArray();
+  NDArray(const DynArray<int64_t> &shape, DLDataType dtype,
+          DLDevice dev);
   static NDArray Empty(const DynArray<int64_t> &shape, DLDataType dtype,
                        DLDevice dev);
   // create a view of the NDArray storage, with the given shape/dtype
@@ -160,9 +163,9 @@ private:
   DLDevice device_;
 
   // Common storage pool
-  DynArray<NDArray> storage_pool_;
+  DynArray<NDArray*> storage_pool_;
   // Data entry for each node
-  DynArray<NDArray> data_entry_;
+  DynArray<NDArray*> data_entry_;
   // Operator for each node
   DynArray<std::function<void()>> op_execs_;
 };

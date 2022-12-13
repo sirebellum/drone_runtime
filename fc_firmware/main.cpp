@@ -45,18 +45,16 @@ int main(int argc, char **argv) {
   json << graph_json.rdbuf();
   printf("Init fc graph exec\n");
   tvm::micro::MicroGraphExecutor exec =
-    tvm::micro::MicroGraphExecutor(json.str(), &mod, {kDLOpenCL, 0});
+    tvm::micro::MicroGraphExecutor(json.str(), &mod, {kDLOpenCL, 1});
 
   // Set up buffers
   float in_data[INPUT_SIZE*MEM_SIZE] = {-1};
   int64_t in_dim[] = {1, MEM_SIZE*INPUT_SIZE};
   _Float16 out_data[NUM_MOTORS] = {-1};
   int64_t out_dim[] = {1, NUM_MOTORS};
-  DLDevice device = {kDLOpenCL, 0};
+  DLDevice device = {kDLOpenCL, 1};
   DLDataType f32_t = {kDLFloat, 32, 0};
   DLDataType f16_t = {kDLFloat, 16, 0};
-  DLTensor in = {in_data, device, 2, f32_t, in_dim, nullptr, 0};
-  DLTensor out = {out_data, device, 2, f16_t, out_dim, nullptr, 0};
 
   // Get opencl platform and device information
   cl_platform_id platform_id = NULL;
@@ -72,12 +70,13 @@ int main(int argc, char **argv) {
 
   // Set up opencl buffers
   cl_mem in_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, 
-          MEM_SIZE*INPUT_SIZE * sizeof(float), NULL, &ret);
+          MEM_SIZE*INPUT_SIZE * sizeof(float), in_data, &ret);
   cl_mem out_mem_obj = clCreateBuffer(context, CL_MEM_HOST_WRITE_ONLY,
-          NUM_MOTORS * sizeof(_Float16), NULL, &ret);
+          NUM_MOTORS * sizeof(_Float16), out_data, &ret);
 
-  // Create a command queue
-  cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+  // TVM buffers
+  DLTensor in = {in_data, device, 2, f32_t, in_dim, nullptr, 0};
+  DLTensor out = {out_data, device, 2, f16_t, out_dim, nullptr, 0};
 
   // Set up i2c
   // TODO do fd inside class
@@ -152,17 +151,10 @@ int main(int argc, char **argv) {
     start = std::chrono::high_resolution_clock::now();
 #endif
 
-    // Copy the lists input to the gpu
-    ret = clEnqueueWriteBuffer(command_queue, in_mem_obj, CL_TRUE, 0,
-            MEM_SIZE*INPUT_SIZE * sizeof(float), in_data, 0, NULL, NULL);
-
     // Run model
     exec.SetInput(0, &in);
     exec.Run();
     exec.CopyOutputTo(0, &out);
-
-    ret = clEnqueueReadBuffer(command_queue, out_mem_obj, CL_TRUE, 0, 
-            NUM_MOTORS * sizeof(_Float16), out_data, 0, NULL, NULL);
 
     // Set motor throttles
     // TODO scale to sim
@@ -176,7 +168,7 @@ int main(int argc, char **argv) {
     stop = std::chrono::high_resolution_clock::now();
     duration = duration_cast<std::chrono::microseconds>(stop - start);
     cout << duration.count() << "us\n";
-    while (duration.count() < 10000) {
+    while (duration.count() < 1000000) {
       stop = std::chrono::high_resolution_clock::now();
       duration = duration_cast<std::chrono::microseconds>(stop - start);
       usleep(1000);
