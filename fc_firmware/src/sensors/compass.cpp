@@ -44,7 +44,7 @@ int16_t COMPASS::two_complement_to_int(uint8_t LSB, uint8_t MSB) {
 }
 
 uint16_t COMPASS::merge_bytes(uint8_t LSB, uint8_t MSB) {
-  return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
+  return (uint16_t)(((MSB & 0xFF) << 8) | LSB);
 }
 void COMPASS::run() {
   auto start = std::chrono::high_resolution_clock::now();

@@ -39,7 +39,7 @@ MPU::MPU(I2c *i2c_interface) {
   this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
   this->i2c->writeByte(REG_FIFO_CONFIG, 0b01111000);
 
-  this->i2c->writeByte(REG_PWR_MGMT_1, 0x00);
+  this->i2c->writeByte(REG_PWR_MGMT_1, 0x10000000);
   this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeByte(REG_GYRO_CONFIG, 0x00);
 
@@ -73,7 +73,7 @@ int16_t MPU::two_complement_to_int(uint8_t MSB, uint8_t LSB) {
 }
 
 uint16_t MPU::merge_bytes(uint8_t LSB, uint8_t MSB) {
-  return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
+  return (uint16_t)(((MSB & 0xFF) << 8) | LSB);
 }
 
 void MPU::calibrate() {
@@ -112,7 +112,19 @@ void MPU::calibrate() {
 
 void MPU::read() {
 
-  this->i2c->readBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
+  this->i2c->readBlock(REG_GYRO_X,   1, gyro_x_h);
+  this->i2c->readBlock(REG_GYRO_X+1, 1, gyro_x_l);
+  this->i2c->readBlock(REG_GYRO_Y,   1, gyro_y_h);
+  this->i2c->readBlock(REG_GYRO_Y+1, 1, gyro_y_l);
+  this->i2c->readBlock(REG_GYRO_Z,   1, gyro_z_h);
+  this->i2c->readBlock(REG_GYRO_Z+1, 1, gyro_z_l);
+
+  this->i2c->readBlock(REG_ACCEL_X,   1, accel_x_h);
+  this->i2c->readBlock(REG_ACCEL_X+1, 1, accel_x_l);
+  this->i2c->readBlock(REG_ACCEL_Y,   1, accel_y_h);
+  this->i2c->readBlock(REG_ACCEL_Y+1, 1, accel_y_l);
+  this->i2c->readBlock(REG_ACCEL_Z,   1, accel_z_h);
+  this->i2c->readBlock(REG_ACCEL_Z+1, 1, accel_z_l);
 
   *this->x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
   *this->y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
@@ -124,7 +136,7 @@ void MPU::read() {
 
   *this->x_accel_g = x_accel - *x_acc_offset;
   *this->y_accel_g = y_accel - *y_acc_offset;
-  *this->z_accel_g = z_accel - *z_acc_offset;
+  *this->z_accel_g = z_accel - *z_acc_offset + 16383; // Gravity
   
   this->timestamp += 1;
 }
