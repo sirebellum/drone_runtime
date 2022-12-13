@@ -18,12 +18,10 @@ SPI::SPI(const char *deviceName) {
 
 SPI::~SPI() { close(fd); }
 
-int SPI::rwBlock(uint8_t size, unsigned char cmd, uint8_t *data) {
-  uint8_t* spiBufTx = new uint8_t[size];
+int SPI::rwBlock(uint8_t size, uint8_t *txdata, uint8_t *rxdata) {
   struct spi_ioc_transfer spi;
-  spiBufTx[0] = cmd;
-  spi.tx_buf =(unsigned long)spiBufTx;
-  spi.rx_buf = (unsigned long)data;
+  spi.tx_buf =(unsigned long)txdata;
+  spi.rx_buf = (unsigned long)rxdata;
   spi.len = size;
   spi.delay_usecs = 0;
   spi.speed_hz = SPI_SPEED;
