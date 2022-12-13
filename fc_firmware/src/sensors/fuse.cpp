@@ -39,15 +39,15 @@ void FUSE::run() {
     start = std::chrono::high_resolution_clock::now();
 
     // Set internal values
-    this->Wx = this->mpu->getGyroX();
-    this->Wy = this->mpu->getGyroY();
-    this->Wz = this->mpu->getGyroZ();
-    this->Ax = this->mpu->getAccX();
-    this->Ay = this->mpu->getAccY();
-    this->Az = this->mpu->getAccZ();
-    this->Gx = this->compass->getX();
-    this->Gy = this->compass->getY();
-    this->Gz = this->compass->getZ();
+    this->Wx = (float)this->mpu->getGyroX()/32767*250;
+    this->Wy = (float)this->mpu->getGyroY()/32767*250;
+    this->Wz = (float)this->mpu->getGyroZ()/32767*250;
+    this->Ax = (float)this->mpu->getAccX()/32767*2;
+    this->Ay = (float)this->mpu->getAccY()/32767*2;
+    this->Az = (float)this->mpu->getAccZ()/32767*2;
+    this->Gx = (float)this->compass->getX()/2048*1.3*100;
+    this->Gy = (float)this->compass->getY()/2048*1.3*100;
+    this->Gz = (float)this->compass->getZ()/2048*1.3*100;
 
     // Update flight model
     ahrs.update(Wx, Wy, Wz,

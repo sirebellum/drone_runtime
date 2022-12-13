@@ -37,6 +37,9 @@ public:
   float getAx() {return Ax;}
   float getAy() {return Ay;}
   float getAz() {return Az;}
+  float getGx() {return Gx;}
+  float getGy() {return Gy;}
+  float getGz() {return Gz;}
 
 private:
   NXPSensorFusion ahrs;

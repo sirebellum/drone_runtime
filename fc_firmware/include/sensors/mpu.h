@@ -20,13 +20,13 @@ public:
   bool running;
 
 
-  // Return raw values in correct units
-  float getGyroX() {return (float)*x_gyro/262;}
-  float getGyroY() {return (float)*y_gyro/262;}
-  float getGyroZ() {return (float)*z_gyro/262;}
-  float getAccX() {return (float)*x_accel_g/16384;}
-  float getAccY() {return (float)*y_accel_g/16384;}
-  float getAccZ() {return (float)*z_accel_g/16384;}
+  // Return raw values
+  int16_t getGyroX() {return *x_gyro;}
+  int16_t getGyroY() {return *y_gyro;}
+  int16_t getGyroZ() {return *z_gyro;}
+  int16_t getAccX() {return *x_accel_g;}
+  int16_t getAccY() {return *y_accel_g;}
+  int16_t getAccZ() {return *z_accel_g;}
 
   clock_t getTime() {return timestamp;}
 

@@ -3,6 +3,7 @@
 #include <linux/i2c.h>
 #include <iostream>
 #include <cstring>
+#include <unistd.h>
 
 I2c::I2c(int fd) {
   this->fd = fd;
@@ -21,7 +22,7 @@ int I2c::writeByte(uint8_t command, __u8 data) {
     uint8_t outbuf[2];
 
     struct i2c_msg msgs[1];
-    struct i2c_rdwr_ioctl_data msgset[1];
+    struct i2c_rdwr_ioctl_data msgset;
 
     outbuf[0] = command;
     outbuf[1] = data;
@@ -31,13 +32,14 @@ int I2c::writeByte(uint8_t command, __u8 data) {
     msgs[0].len = 2;
     msgs[0].buf = outbuf;
 
-    msgset[0].msgs = msgs;
-    msgset[0].nmsgs = 1;
+    msgset.msgs = msgs;
+    msgset.nmsgs = 1;
 
   int result = ioctl(fd, I2C_RDWR, &msgset);
-  if (result == -1) {
-    std::cout << "I2C: Failed to write block data byte to I2c." << std::endl;
-    return -1;
+  while (result == -1) {
+    std::cout << "I2C: Failed to write data byte to I2c, retrying" << std::endl;
+    usleep(100);
+    result = ioctl(fd, I2C_RDWR, &msgset);
   }
   return 1;
 }
@@ -68,9 +70,5 @@ int I2c::readBlock(__u8 command, uint8_t size, __u8 *data) {
   msgset.nmsgs = 2;
 
   int result = ioctl(fd, I2C_RDWR, &msgset);
-  if (result != size) {
-    // std::cout << "I2C: Failed to read block from I2c." << std::endl;
-    return -1;
-  }
   return 0;
 }

@@ -26,10 +26,26 @@ COMPASS::COMPASS(I2c *i2c_interface) {
 
 COMPASS::~COMPASS() {}
 
+// 16 bits data on the MPU6050 are in two registers,
+// encoded in two complement. So we convert those to int16_t
+int16_t COMPASS::two_complement_to_int(uint8_t LSB, uint8_t MSB) {
+  uint16_t uword;
+  uint16_t sword;
+
+  uword = merge_bytes(LSB, MSB);
+
+  if ((uword & 0x10000) == 0x10000) { // negative number
+    sword = -(int16_t)(~uword+1);
+  } else {
+    sword = (int16_t)(uword);
+  }
+
+  return sword;
+}
+
 uint16_t COMPASS::merge_bytes(uint8_t LSB, uint8_t MSB) {
   return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
 }
-
 void COMPASS::run() {
   auto start = std::chrono::high_resolution_clock::now();
   auto stop = std::chrono::high_resolution_clock::now();
@@ -52,16 +68,16 @@ void COMPASS::run() {
     // Read for all 3 axes
     this->upper_byte = this->i2c->readByte(OUTPUT_X_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_X_LSB_R);
-    this->x = this->merge_bytes(this->lower_byte, this->upper_byte);
+    this->x = two_complement_to_int(this->lower_byte, this->upper_byte);
 
     this->upper_byte = this->i2c->readByte(OUTPUT_Y_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_Y_LSB_R);
-    this->y = this->merge_bytes(this->lower_byte, this->upper_byte);
+    this->y = two_complement_to_int(this->lower_byte, this->upper_byte);
 
     this->upper_byte = this->i2c->readByte(OUTPUT_Z_MSB_R);
     this->lower_byte = this->i2c->readByte(OUTPUT_Z_LSB_R);
-    this->z = this->merge_bytes(this->lower_byte, this->upper_byte);
-
+    this->z = two_complement_to_int(this->lower_byte, this->upper_byte);
+    
     this->i2c->locked = false;
 
     // Keep in time (120Hz)

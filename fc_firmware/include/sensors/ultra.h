@@ -5,7 +5,6 @@
 #include <sys/ioctl.h>
 
 #define DEFAULT_ULTRA_ADRESS 0x70
-#define MAX_RANGE 700 // cm
 
 class ULTRA {
 public:
@@ -14,11 +13,11 @@ public:
   I2c *i2c;
   int address = DEFAULT_ULTRA_ADRESS;
   void run();
-  float getAltitude();
+  uint16_t getAltitude();
   bool running;
 
 private:
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);
   unsigned char bytes[2];
-  float altitude = -1;
+  uint16_t altitude = 0;
 };

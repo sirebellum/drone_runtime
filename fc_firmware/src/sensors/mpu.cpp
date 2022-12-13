@@ -27,11 +27,13 @@
 MPU::MPU(I2c *i2c_interface) {
   this->i2c = i2c_interface;
 
+  // Wait for lock on i2c
+  while (this->i2c->locked)
+    usleep(100);
+  this->i2c->locked = true;
+
   if (this->i2c->addressSet(this->address) == -1)
     printf("Unable to open mpu sensor i2c address...\n");
-
-  // Reset sensors
-  this->i2c->writeByte(REG_SIGNAL_RESET, 0b00000110);
 
   // Enable fifo
   this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
@@ -45,9 +47,10 @@ MPU::MPU(I2c *i2c_interface) {
   // this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
-  this->i2c->writeByte(REG_CONFIG, 0x02);
+  this->i2c->writeByte(REG_CONFIG, 0x00);
 
   this->running = true;
+  this->i2c->locked = false;
 }
 
 MPU::~MPU() {}

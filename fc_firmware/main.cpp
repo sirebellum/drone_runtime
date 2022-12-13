@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
   // Set up i2c
   // TODO do fd inside class
   printf("Init I2c\n");
-  std::string i2c_deviceName = "/dev/i2c-1";
+  std::string i2c_deviceName = "/dev/i2c-0";
   int fd = open(i2c_deviceName.c_str(), 0, O_RDWR);
   I2c i2c = I2c(fd);
 
@@ -179,9 +179,8 @@ int main(int argc, char **argv) {
     printf("R %.3f  P %.3f  Y %.3f\n", in_data[3], in_data[4], in_data[5]);
     printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
     printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
-    printf("Cx %.3f Cy %.3f  Cz %.3f\n", compass.getX(), compass.getY(),
-           compass.getZ());
-    printf("Altitude raw %f\n", ultra.getAltitude());
+    printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
+    printf("Altitude raw %d\n", ultra.getAltitude());
     printf("===========================\n");
 #endif
   }

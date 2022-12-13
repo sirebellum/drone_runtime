@@ -14,7 +14,7 @@ uint16_t ULTRA::merge_bytes(uint8_t LSB, uint8_t MSB) {
   return (uint16_t)(((LSB & 0xFF) << 8) | MSB);
 }
 
-float ULTRA::getAltitude() { return this->altitude; }
+uint16_t ULTRA::getAltitude() { return this->altitude; }
 
 void ULTRA::run() {
   while (this->running) {
@@ -48,7 +48,7 @@ void ULTRA::run() {
     }
     this->i2c->readBlock(0, 2, this->bytes);
     this->altitude =
-        (float)this->merge_bytes(this->bytes[1], this->bytes[0]) / MAX_RANGE;
+        (float)this->merge_bytes(this->bytes[1], this->bytes[0]);
     this->i2c->locked = false;
     usleep(20000);
   }
