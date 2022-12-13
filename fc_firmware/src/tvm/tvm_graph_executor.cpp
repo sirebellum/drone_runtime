@@ -314,8 +314,8 @@ void MicroGraphExecutor::CopyOutputTo(int index, DLTensor *data_out) {
 void MicroGraphExecutor::SetupStorage() {
   // Grab saved optimization plan from graph.
   DynArray<DLDataType> vtype(attrs_.dltype.size());
+  DLDataType ty;
   for (size_t i = 0; i < attrs_.dltype.size(); ++i) {
-    DLDataType ty;
     if (attrs_.dltype[i] == "float32") {
       ty.bits = 32;
       ty.lanes = 1;
@@ -364,7 +364,7 @@ void MicroGraphExecutor::SetupStorage() {
   for (size_t i = 0; i < pool_entry.size(); ++i) {
     const auto &pit = pool_entry[i];
     DynArray<int64_t> shape(1);
-    shape[0] = static_cast<int64_t>(pit.size + 3) / 4;
+    shape[0] = static_cast<int64_t>(pit.size + (ty.bits/8)-1) / (ty.bits/8);
     storage_pool_[i] = new NDArray(shape, vtype[i], device_);
   }
 

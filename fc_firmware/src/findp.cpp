@@ -9,9 +9,7 @@
 
 #define CMD_GET_IMAGE 69
 
-FINDP::FINDP(SPI *spi) {
-  this->spi = spi;
-
+FINDP::FINDP() {
   // hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
 
   // Start
@@ -39,7 +37,7 @@ void FINDP::run() {
 
   // Set up vars
   uint32_t image_size;
-  unsigned char image[BUFF_SIZE] = {69};
+  unsigned char image[JPG_BUFF_SIZE];
   cv::Mat image_mat;
 
   // People detection
@@ -47,35 +45,33 @@ void FINDP::run() {
   std::vector<double> weights;
   bool detected = false;
 
+  // indices
+  unsigned char indices[JPG_BUFF_SIZE];
+  for (size_t i = 0; i < JPG_BUFF_SIZE; ++i)
+    indices[i] = i; 
+
   while (this->running) {
 
-    spi->rwBlock(BUFF_SIZE, CMD_GET_IMAGE, image);
-    printf("%u\n", image[0]);
+    // TODO get usb image
+
 
     // Decode image
-    // image_mat = cv::imdecode((cv::InputArray)image, cv::IMREAD_GRAYSCALE);
+    // image_mat = cv::imdecode(image, cv::IMREAD_GRAYSCALE);
 
     // // Run model
     // this->hog.detectMultiScale(image_mat, found, weights);
 
-    // // Check for detections
+    // // // Check for detections
     // for (size_t i = 0; i < found.size(); i++) {
     //   if (weights[i] >= 0.5) {
     //     printf("Detected!\n");
-    //     this->spi->packetReadWrite(notify);
     //     detected = true;
     //   }
     // }
 
-    // // Save image to disk and delete from memory
+    // // Save image to disk
     // this->archiveImage(&image_mat, detected);
     // detected = false;
-    // delete (image);
-
-    // // Thermal camera time
-    // image_mat = cv::Mat(IMAGE_IR_X, IMAGE_IR_Y, CV_32F, this->ir_image);
-    // this->archiveImage(&image_mat, false);
-
     sleep(1);
   }
 }
