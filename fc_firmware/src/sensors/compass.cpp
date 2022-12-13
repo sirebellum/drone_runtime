@@ -3,14 +3,11 @@
 #include <unistd.h>
 #include <chrono>
 
-#define HOVER_HEIGHT 300 // cm
-#define COMPASS_MODE_R 0x02
-#define OUTPUT_X_MSB_R 0x03
-#define OUTPUT_X_LSB_R 0x04
-#define OUTPUT_Y_MSB_R 0x05
-#define OUTPUT_Y_LSB_R 0x06
-#define OUTPUT_Z_MSB_R 0x07
-#define OUTPUT_Z_LSB_R 0x08
+#define REG_CTRL1 0x1B
+#define REG_CTRL2 0x1C
+#define REG_COMP_X 0x10
+#define REG_COMP_Y 0x12
+#define REG_COMP_Z 0x14
 
 COMPASS::COMPASS(I2c *i2c_interface) {
   this->i2c = i2c_interface;
@@ -18,8 +15,10 @@ COMPASS::COMPASS(I2c *i2c_interface) {
   if (this->i2c->addressSet(this->address) == -1)
     printf("Unable to open compass sensor i2c address...\n");
 
-  // Set to continuous mode
-  this->i2c->writeByte(COMPASS_MODE_R, 0x00);
+  // 100hz reading mode, start
+  this->i2c->writeByte(REG_CTRL1, 0b11111111);
+  // Enable fifo
+  // this->i2c->writeByte(REG_CTRL1, 0x10);
 
   this->running = true;
 }
@@ -66,17 +65,17 @@ void COMPASS::run() {
     }
 
     // Read for all 3 axes
-    this->upper_byte = this->i2c->readByte(OUTPUT_X_MSB_R);
-    this->lower_byte = this->i2c->readByte(OUTPUT_X_LSB_R);
-    this->x = two_complement_to_int(this->lower_byte, this->upper_byte);
+    upper_byte = this->i2c->readByte(REG_COMP_X+1);
+    lower_byte = this->i2c->readByte(REG_COMP_X);
+    this->x = two_complement_to_int(lower_byte, upper_byte);
 
-    this->upper_byte = this->i2c->readByte(OUTPUT_Y_MSB_R);
-    this->lower_byte = this->i2c->readByte(OUTPUT_Y_LSB_R);
-    this->y = two_complement_to_int(this->lower_byte, this->upper_byte);
+    upper_byte = this->i2c->readByte(REG_COMP_Y+1);
+    lower_byte = this->i2c->readByte(REG_COMP_Y);
+    this->y = two_complement_to_int(lower_byte, upper_byte);
 
-    this->upper_byte = this->i2c->readByte(OUTPUT_Z_MSB_R);
-    this->lower_byte = this->i2c->readByte(OUTPUT_Z_LSB_R);
-    this->z = two_complement_to_int(this->lower_byte, this->upper_byte);
+    upper_byte = this->i2c->readByte(REG_COMP_Z+1);
+    lower_byte = this->i2c->readByte(REG_COMP_Z);
+    this->z = two_complement_to_int(lower_byte, upper_byte);
     
     this->i2c->locked = false;
 

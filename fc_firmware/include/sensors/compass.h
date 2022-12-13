@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
-#define DEFAULT_COMPASS_ADDRESS 0x1E
+#define DEFAULT_COMPASS_ADDRESS 0x0C
 
 class COMPASS {
 public:

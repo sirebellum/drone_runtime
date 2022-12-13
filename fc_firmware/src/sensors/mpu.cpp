@@ -112,19 +112,7 @@ void MPU::calibrate() {
 
 void MPU::read() {
 
-  this->i2c->readBlock(REG_GYRO_X,   1, gyro_x_h);
-  this->i2c->readBlock(REG_GYRO_X+1, 1, gyro_x_l);
-  this->i2c->readBlock(REG_GYRO_Y,   1, gyro_y_h);
-  this->i2c->readBlock(REG_GYRO_Y+1, 1, gyro_y_l);
-  this->i2c->readBlock(REG_GYRO_Z,   1, gyro_z_h);
-  this->i2c->readBlock(REG_GYRO_Z+1, 1, gyro_z_l);
-
-  this->i2c->readBlock(REG_ACCEL_X,   1, accel_x_h);
-  this->i2c->readBlock(REG_ACCEL_X+1, 1, accel_x_l);
-  this->i2c->readBlock(REG_ACCEL_Y,   1, accel_y_h);
-  this->i2c->readBlock(REG_ACCEL_Y+1, 1, accel_y_l);
-  this->i2c->readBlock(REG_ACCEL_Z,   1, accel_z_h);
-  this->i2c->readBlock(REG_ACCEL_Z+1, 1, accel_z_l);
+  this->i2c->readBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
 
   *this->x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
   *this->y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
