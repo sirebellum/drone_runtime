@@ -96,8 +96,6 @@ class NDArray {
 public:
   // initialize NDArray with shape/dtype/device
   NDArray();
-  NDArray(const DynArray<int64_t> &shape, DLDataType dtype,
-          DLDevice dev);
   static NDArray Empty(const DynArray<int64_t> &shape, DLDataType dtype,
                        DLDevice dev);
   // create a view of the NDArray storage, with the given shape/dtype
@@ -142,7 +140,7 @@ private:
   uint32_t entry_id(uint32_t nid, uint32_t index) const {
     return node_row_ptr_[nid] + index;
   }
-  uint32_t entry_id(const NodeEntry &e) const {
+  uint32_t entry_id(const NodeEntry e) const {
     return entry_id(e.node_id, e.index);
   }
 
@@ -163,9 +161,9 @@ private:
   DLDevice device_;
 
   // Common storage pool
-  DynArray<NDArray*> storage_pool_;
+  DynArray<NDArray> storage_pool_;
   // Data entry for each node
-  DynArray<NDArray*> data_entry_;
+  DynArray<NDArray> data_entry_;
   // Operator for each node
   DynArray<std::function<void()>> op_execs_;
 };

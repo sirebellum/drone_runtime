@@ -131,26 +131,6 @@ void ParseArgNodes(const picojson::array &jinput_nodes,
 NDArray::~NDArray() {}
 
 NDArray::NDArray() {}
-NDArray::NDArray(const DynArray<int64_t> &shape, DLDataType dtype,
-                 DLDevice dev) {
-  int64_t nbytes = (dtype.bits * dtype.lanes + 7) / 8;
-  for (const auto &s : shape) {
-    nbytes *= s;
-  }
-
-  this->storage_ = std::shared_ptr<void>(
-      TVMBackendAllocWorkspace(static_cast<int>(dev.device_type),
-                               static_cast<int>(dev.device_id), nbytes,
-                               dtype.code, dtype.bits),
-      [=](void *ptr) {
-        if (ptr) {
-          TVMBackendFreeWorkspace(dev.device_type, dev.device_id, ptr);
-        }
-      });
-  this->shape_ = shape;
-  this->dtype_ = dtype;
-  this->device_ = dev;
-}
 
 NDArray NDArray::Empty(const DynArray<int64_t> &shape, DLDataType dtype,
                        DLDevice dev) {
@@ -232,8 +212,8 @@ DSOModule::DSOModule(const std::string &name) {
   }
   // Initialize the functions
   TVM_INIT_CONTEXT_FUNC(TVMAPISetLastError);
-  // TVM_INIT_CONTEXT_FUNC(TVMBackendAllocWorkspace);
-  // TVM_INIT_CONTEXT_FUNC(TVMBackendFreeWorkspace);
+  TVM_INIT_CONTEXT_FUNC(TVMBackendAllocWorkspace);
+  TVM_INIT_CONTEXT_FUNC(TVMBackendFreeWorkspace);
   // TVM_INIT_CONTEXT_FUNC(TVMBackendParallelLaunch);
 // TODO(tulloch): implement these functions?
 // TVM_INIT_CONTEXT_FUNC(TVMFuncCall);
@@ -284,12 +264,7 @@ MicroGraphExecutor::MicroGraphExecutor(const std::string &graph_json,
   SetupOpExecs();
 }
 
-MicroGraphExecutor::~MicroGraphExecutor() {
-  // Delete storage epool
-  for (size_t i = 0; i < storage_pool_.size(); ++i) {
-    delete storage_pool_[i];
-  }
-}
+MicroGraphExecutor::~MicroGraphExecutor() {}
 
 void MicroGraphExecutor::Run() {
   for (size_t i = 0; i < op_execs_.size(); ++i) {
@@ -301,14 +276,14 @@ void MicroGraphExecutor::Run() {
 void MicroGraphExecutor::SetInput(int index, DLTensor *data_in) {
   assert(static_cast<size_t>(index) < input_nodes_.size());
   uint32_t eid = this->entry_id(input_nodes_[index], 0);
-  data_entry_[eid]->CopyFrom(data_in);
+  data_entry_[eid].CopyFrom(data_in);
 }
 
 void MicroGraphExecutor::CopyOutputTo(int index, DLTensor *data_out) {
   assert(static_cast<size_t>(index) < outputs_.size());
   uint32_t eid = this->entry_id(outputs_[index]);
-  const NDArray *data = data_entry_[eid];
-  data->CopyTo(data_out);
+  const NDArray data = data_entry_[eid];
+  data.CopyTo(data_out);
 }
 
 void MicroGraphExecutor::SetupStorage() {
@@ -365,7 +340,7 @@ void MicroGraphExecutor::SetupStorage() {
     const auto &pit = pool_entry[i];
     DynArray<int64_t> shape(1);
     shape[0] = static_cast<int64_t>(pit.size + (ty.bits/8)-1) / (ty.bits/8);
-    storage_pool_[i] = new NDArray(shape, vtype[i], device_);
+    storage_pool_[i] = NDArray::Empty(shape, vtype[i], device_);
   }
 
   // Assign the pooled entries. A unified memory pool is used to simplify
@@ -375,7 +350,7 @@ void MicroGraphExecutor::SetupStorage() {
   for (size_t i = 0; i < data_entry_.size(); ++i) {
     int storage_id = attrs_.storage_id[i];
     assert(static_cast<size_t>(storage_id) < storage_pool_.size());
-    data_entry_[i] = storage_pool_[storage_id];
+    data_entry_[i] = storage_pool_[storage_id].CreateView(attrs_.shape[i], vtype[i]);;
   }
 }
 
@@ -438,17 +413,17 @@ void MicroGraphExecutor::SetupOpExecs() {
   op_execs_.resize(nodes_.size());
   // setup the array and requirements.
   for (uint32_t nid = 0; nid < nodes_.size(); ++nid) {
-    const auto &inode = nodes_[nid];
+    const auto inode = nodes_[nid];
     if (inode.op_type == "null")
       continue;
     DynArray<DLTensor> args(inode.param.num_inputs + inode.param.num_outputs);
     for (size_t i = 0; i < inode.param.num_inputs; ++i) {
       const auto &e = inode.inputs[i];
-      args[i] = data_entry_[this->entry_id(e)]->ToDLTensor();
+      args[i] = data_entry_[this->entry_id(e)].ToDLTensor();
     }
     for (size_t index = 0; index < inode.param.num_outputs; ++index) {
       uint32_t eid = this->entry_id(nid, index);
-      args[index + inode.param.num_inputs] = data_entry_[eid]->ToDLTensor();
+      args[index + inode.param.num_inputs] = data_entry_[eid].ToDLTensor();
     }
     assert(inode.op_type == "tvm_op");
     op_execs_[nid] = CreateTVMOp(*module_, inode.param, args);

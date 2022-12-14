@@ -26,15 +26,8 @@
 
 void *TVMBackendAllocWorkspace(int device_type, int device_id, uint64_t nbytes,
                                int dtype_code_hint, int dtype_bits_hint) {
-  void *ptr = nullptr;
   assert(nbytes > 0);
-#ifdef __ANDROID__
-  ptr = memalign(64, nbytes);
-#else
-  const int ret = posix_memalign(&ptr, 64, nbytes);
-  (void)ret;
-  assert(ret == 0);
-#endif
+  void *ptr  = new uint8_t(nbytes);
   return ptr;
 }
 
