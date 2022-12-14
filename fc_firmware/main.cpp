@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <dshot/DShot.h>
-#include <io/i2c.h>
 #include <sensors/fuse.h>
 #include <findp.h>
 #include <tvm/runtime/module.h>
@@ -135,11 +133,6 @@ int main(int argc, char **argv) {
     stop = std::chrono::high_resolution_clock::now();
     duration = duration_cast<std::chrono::microseconds>(stop - start);
     cout << duration.count() << "us\n";
-    while (duration.count() < 1000000) {
-      stop = std::chrono::high_resolution_clock::now();
-      duration = duration_cast<std::chrono::microseconds>(stop - start);
-      usleep(1000);
-    }
     printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            out_data[3]);
     printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
