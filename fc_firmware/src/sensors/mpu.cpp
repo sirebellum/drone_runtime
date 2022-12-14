@@ -39,7 +39,7 @@ MPU::MPU(I2c *i2c_interface) {
   this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
   this->i2c->writeByte(REG_FIFO_CONFIG, 0b01111000);
 
-  this->i2c->writeByte(REG_PWR_MGMT_1, 0x10000000);
+  this->i2c->writeByte(REG_PWR_MGMT_1, 0b10000000);
   this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeByte(REG_GYRO_CONFIG, 0x00);
 

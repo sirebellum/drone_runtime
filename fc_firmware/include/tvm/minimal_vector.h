@@ -29,14 +29,15 @@ namespace micro {
 
 // A minimal wrapper, derived from https://github.com/Robbepop/dynarray/, that
 // supports a minimal subset of the std::vector API with a minimized code size.
-template <typename T> struct DynArray {
+template <typename T>
+struct DynArray {
   using value_type = T;
   using size_type = size_t;
   using difference_type = std::ptrdiff_t;
-  using reference = value_type &;
-  using const_reference = value_type const &;
-  using pointer = value_type *;
-  using const_pointer = value_type const *;
+  using reference = value_type&;
+  using const_reference = value_type const&;
+  using pointer = value_type*;
+  using const_pointer = value_type const*;
   using iterator = pointer;
   using const_iterator = const_pointer;
   using reverse_iterator = std::reverse_iterator<iterator>;
@@ -44,12 +45,12 @@ template <typename T> struct DynArray {
 
   explicit DynArray(size_type size = 0) { resize(size); }
 
-  DynArray(const DynArray &other) {
+  DynArray(const DynArray& other) {
     resize(other.size());
     std::copy(other.begin(), other.end(), begin());
   }
 
-  DynArray &operator=(const DynArray &other) {
+  DynArray& operator=(const DynArray& other) {
     resize(other.size());
     std::copy(other.begin(), other.end(), begin());
     return *this;
@@ -94,12 +95,12 @@ template <typename T> struct DynArray {
 
   const_reference back() const { return data_[size_ - 1]; }
 
-private:
+ private:
   std::unique_ptr<T[]> data_;
   size_type size_;
 };
 
-} // namespace micro
-} // namespace tvm
+}  // namespace micro
+}  // namespace tvm
 
-#endif // TVM_RUNTIME_MICRO_STANDALONE_MINIMAL_VECTOR_H_
+#endif  // TVM_RUNTIME_MICRO_STANDALONE_MINIMAL_VECTOR_H_

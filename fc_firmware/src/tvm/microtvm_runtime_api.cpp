@@ -24,24 +24,26 @@
 #include <cassert>
 #include <string>
 
-void *TVMBackendAllocWorkspace(int device_type, int device_id, uint64_t nbytes,
-                               int dtype_code_hint, int dtype_bits_hint) {
+void* TVMBackendAllocWorkspace(int device_type, int device_id, uint64_t nbytes, int dtype_code_hint,
+                               int dtype_bits_hint) {
+  void* ptr = nullptr;
   assert(nbytes > 0);
-  void *ptr  = new uint8_t(nbytes);
+  const int ret = posix_memalign(&ptr, 64, nbytes);
+  (void)ret;
+  assert(ret == 0);
   return ptr;
 }
 
-int TVMBackendFreeWorkspace(int device_type, int device_id, void *ptr) {
+int TVMBackendFreeWorkspace(int device_type, int device_id, void* ptr) {
   free(ptr);
   return 0;
 }
 
 static thread_local std::string g_last_error;
-void TVMAPISetLastError(const char *msg) { g_last_error = msg; }
-const char *TVMGetLastError(void) { return g_last_error.c_str(); }
+void TVMAPISetLastError(const char* msg) { g_last_error = msg; }
+const char* TVMGetLastError(void) { return g_last_error.c_str(); }
 
-int TVMBackendParallelLaunch(FTVMParallelLambda flambda, void *cdata,
-                             int num_task) {
+int TVMBackendParallelLaunch(FTVMParallelLambda flambda, void* cdata, int num_task) {
   TVMParallelGroupEnv env;
   env.num_task = 1;
   flambda(0, &env, cdata);
