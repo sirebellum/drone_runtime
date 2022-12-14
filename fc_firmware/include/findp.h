@@ -1,4 +1,3 @@
-#include <io/spi.h>
 #include <iostream>
 #include <linux/types.h>
 #include <opencv2/opencv.hpp>
@@ -15,7 +14,6 @@ class FINDP {
 public:
   FINDP();
   ~FINDP();
-  SPI *spi;
   void run();
   void archiveImage(cv::Mat *img, bool detected);
   bool running;

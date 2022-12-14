@@ -12,11 +12,11 @@
 COMPASS::COMPASS(I2c *i2c_interface) {
   this->i2c = i2c_interface;
 
-  if (this->i2c->addressSet(this->address) == -1)
-    printf("Unable to open compass sensor i2c address...\n");
+  // if (this->i2c->addressSet(this->address) == -1)
+    // printf("Unable to open compass sensor i2c address...\n");
 
   // 100hz reading mode, start
-  this->i2c->writeByte(REG_CTRL1, 0b11111111);
+  // this->i2c->writeByte(REG_CTRL1, 0b11111111);
   // Enable fifo
   // this->i2c->writeByte(REG_CTRL1, 0x10);
 
@@ -53,31 +53,31 @@ void COMPASS::run() {
     start = std::chrono::high_resolution_clock::now();
     
     // Wait for lock on i2c
-    while (this->i2c->locked)
-      continue;
-    this->i2c->locked = true;
+    // while (this->i2c->locked)
+    //   continue;
+    // this->i2c->locked = true;
 
-    if (this->i2c->addressSet(this->address) == -1) {
-      this->i2c->locked = false;
-      printf("Unable to access compass sensor i2c address...\n");
-      usleep(100);
-      continue;
-    }
+    // if (this->i2c->addressSet(this->address) == -1) {
+    //   this->i2c->locked = false;
+    //   printf("Unable to access compass sensor i2c address...\n");
+    //   usleep(100);
+    //   continue;
+    // }
 
-    // Read for all 3 axes
-    upper_byte = this->i2c->readByte(REG_COMP_X+1);
-    lower_byte = this->i2c->readByte(REG_COMP_X);
-    this->x = two_complement_to_int(lower_byte, upper_byte);
+    // // Read for all 3 axes
+    // upper_byte = this->i2c->readByte(REG_COMP_X+1);
+    // lower_byte = this->i2c->readByte(REG_COMP_X);
+    // this->x = two_complement_to_int(lower_byte, upper_byte);
 
-    upper_byte = this->i2c->readByte(REG_COMP_Y+1);
-    lower_byte = this->i2c->readByte(REG_COMP_Y);
-    this->y = two_complement_to_int(lower_byte, upper_byte);
+    // upper_byte = this->i2c->readByte(REG_COMP_Y+1);
+    // lower_byte = this->i2c->readByte(REG_COMP_Y);
+    // this->y = two_complement_to_int(lower_byte, upper_byte);
 
-    upper_byte = this->i2c->readByte(REG_COMP_Z+1);
-    lower_byte = this->i2c->readByte(REG_COMP_Z);
-    this->z = two_complement_to_int(lower_byte, upper_byte);
+    // upper_byte = this->i2c->readByte(REG_COMP_Z+1);
+    // lower_byte = this->i2c->readByte(REG_COMP_Z);
+    // this->z = two_complement_to_int(lower_byte, upper_byte);
     
-    this->i2c->locked = false;
+    // this->i2c->locked = false;
 
     // Keep in time (120Hz)
     stop = std::chrono::high_resolution_clock::now();

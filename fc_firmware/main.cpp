@@ -22,7 +22,7 @@
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 int interrupt;
 void signal_callback_handler(int signum) {
-   cout << "Caught signal " << signum << endl;
+   std::cout << "Caught signal " << signum << std::endl;
    interrupt = signum;
 }
 
@@ -114,9 +114,6 @@ int main(int argc, char **argv) {
     start = std::chrono::high_resolution_clock::now();
 #endif
 
-    for(size_t elem = 0 ; elem < MEM_SIZE*INPUT_SIZE; ++elem)
-      in_data[elem] = (float)rand()/(float)RAND_MAX;
-
     // Run model
     exec.SetInput(0, &in);
     exec.Run();
@@ -132,7 +129,7 @@ int main(int argc, char **argv) {
 #if DEBUG
     stop = std::chrono::high_resolution_clock::now();
     duration = duration_cast<std::chrono::microseconds>(stop - start);
-    cout << duration.count() << "us\n";
+    std::cout << duration.count() << "us\n";
     printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            out_data[3]);
     printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);

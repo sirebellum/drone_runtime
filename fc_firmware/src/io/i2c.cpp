@@ -16,9 +16,30 @@ int I2c::addressSet(uint8_t address) {
   return 0;
 }
 
-// TODO check to make sure protocol is correct
-// TODO get spidev to show up
-int I2c::writeByte(uint8_t command, __u8 data) {
+int I2c::writeRawByte(__u8 data) {
+    uint8_t outbuf;
+
+    struct i2c_msg msg;
+    struct i2c_rdwr_ioctl_data msgset;
+
+    msg.addr = this->slave_sel;
+    msg.flags = 0;
+    msg.len = 1;
+    msg.buf = &data;
+
+    msgset.msgs = &msg;
+    msgset.nmsgs = 1;
+
+  int result = ioctl(fd, I2C_RDWR, &msgset);
+  while (result == -1) {
+    std::cout << "I2C: Failed to write data byte to I2c, retrying" << std::endl;
+    usleep(100);
+    result = ioctl(fd, I2C_RDWR, &msgset);
+  }
+  return 1;
+}
+
+int I2c::writeRegisterByte(__u8 command, __u8 data) {
     uint8_t outbuf[2];
 
     struct i2c_msg msgs[1];
@@ -44,13 +65,37 @@ int I2c::writeByte(uint8_t command, __u8 data) {
   return 1;
 }
 
-uint8_t I2c::readByte(__u8 command) {
+uint8_t I2c::readRawByte() {
   uint8_t output;
-  readBlock(command, 1, &output);
+  readRawBlock(1, &output);
   return output;
 }
 
-int I2c::readBlock(__u8 command, uint8_t size, __u8 *data) {
+uint8_t I2c::readRegisterByte(__u8 command) {
+  uint8_t output;
+  readRegisterBlock(command, 1, &output);
+  return output;
+}
+
+int I2c::readRawBlock(size_t size, __u8 *data) {
+
+  struct i2c_msg msg;
+  struct i2c_rdwr_ioctl_data msgset;
+
+  memset(data, 0, size);
+  msg.addr = this->slave_sel;
+  msg.flags = I2C_M_RD;
+  msg.len = size;
+  msg.buf = data;
+
+  msgset.msgs = &msg;
+  msgset.nmsgs = 1;
+
+  int result = ioctl(fd, I2C_RDWR, &msgset);
+  return result;
+}
+
+int I2c::readRegisterBlock(__u8 command, size_t size, __u8 *data) {
 
   struct i2c_msg msgs[2];
   struct i2c_rdwr_ioctl_data msgset;
@@ -70,5 +115,5 @@ int I2c::readBlock(__u8 command, uint8_t size, __u8 *data) {
   msgset.nmsgs = 2;
 
   int result = ioctl(fd, I2C_RDWR, &msgset);
-  return 0;
+  return result;
 }

@@ -30,7 +30,7 @@ void ULTRA::run() {
     }
 
     // Initiate reading
-    this->i2c->writeByte(81, 1);
+    this->i2c->writeRawByte(81);
     this->i2c->locked = false;
     usleep(80000);
 
@@ -46,9 +46,9 @@ void ULTRA::run() {
       usleep(100);
       continue;
     }
-    this->i2c->readBlock(0, 2, this->bytes);
+    this->i2c->readRawBlock(2, this->bytes);
     this->altitude =
-        this->merge_bytes(this->bytes[0], this->bytes[1]);
+        this->merge_bytes(this->bytes[1], this->bytes[0]);
     this->i2c->locked = false;
     usleep(20000);
   }

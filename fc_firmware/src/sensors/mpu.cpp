@@ -36,18 +36,18 @@ MPU::MPU(I2c *i2c_interface) {
     printf("Unable to open mpu sensor i2c address...\n");
 
   // Enable fifo
-  this->i2c->writeByte(REG_USER_CTRL, 0b01000101);
-  this->i2c->writeByte(REG_FIFO_CONFIG, 0b01111000);
+  this->i2c->writeRegisterByte(REG_USER_CTRL, 0b01000101);
+  this->i2c->writeRegisterByte(REG_FIFO_CONFIG, 0b01111000);
 
-  this->i2c->writeByte(REG_PWR_MGMT_1, 0b10000000);
-  this->i2c->writeByte(REG_ACCEL_CONFIG, 0x00);
-  this->i2c->writeByte(REG_GYRO_CONFIG, 0x00);
+  this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b10000000);
+  this->i2c->writeRegisterByte(REG_ACCEL_CONFIG, 0x00);
+  this->i2c->writeRegisterByte(REG_GYRO_CONFIG, 0x00);
 
   // Enable interrupts
   // this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
 
   // Set up bandwidth to something less noisy
-  this->i2c->writeByte(REG_CONFIG, 0x00);
+  this->i2c->writeRegisterByte(REG_CONFIG, 0x00);
 
   this->running = true;
   this->i2c->locked = false;
@@ -112,7 +112,7 @@ void MPU::calibrate() {
 
 void MPU::read() {
 
-  this->i2c->readBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
+  this->i2c->readRegisterBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
 
   *this->x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
   *this->y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
