@@ -5,9 +5,9 @@
 #include <io/i2c.h>
 #include <sensors/fuse.h>
 #include <findp.h>
-#include <tvm/microtvm_graph_executor.h>
+#include <tvm/runtime/module.h>
+#include <tvm/runtime/graph_executor.h>
 #include <dlpack/dlpack.h>
-#include <CL/cl.h>
 
 #include <fstream>
 #include <fcntl.h>
@@ -38,45 +38,29 @@ int main(int argc, char **argv) {
   // Set up tvm runtime
   std::string so = "/home/drone/firmware/fc.so";
   printf("Loading %s\n", so.c_str());
-  tvm::micro::DSOModule mod = tvm::micro::DSOModule(so.c_str());
+  tvm::runtime::Module mod = tvm::runtime::Module::LoadFromFile(so.c_str(), "so");
 
   std::ifstream graph_json("/home/drone/firmware/fc.json");
   std::stringstream json;
   json << graph_json.rdbuf();
   printf("Init fc graph exec\n");
-  tvm::micro::MicroGraphExecutor exec =
-    tvm::micro::MicroGraphExecutor(json.str(), &mod, {kDLOpenCL, 1});
+  tvm::runtime::GraphExecutor exec;
+  DLDevice device = {kDLCPU, 0};
+  std::vector<DLDevice> devices;
+  devices.push_back(device);
+  exec.Init(json.str(), mod, devices);
 
   // Set up buffers
-  float in_data[INPUT_SIZE*MEM_SIZE] = {-1};
-  int64_t in_dim[] = {1, MEM_SIZE*INPUT_SIZE};
-  _Float16 out_data[NUM_MOTORS] = {-1};
-  int64_t out_dim[] = {1, NUM_MOTORS};
-  DLDevice device = {kDLOpenCL, 1};
-  DLDataType f32_t = {kDLFloat, 32, 0};
-  DLDataType f16_t = {kDLFloat, 16, 0};
-
-  // Get opencl platform and device information
-  cl_platform_id platform_id = NULL;
-  cl_device_id device_id = NULL;   
-  cl_uint ret_num_devices;
-  cl_uint ret_num_platforms;
-  cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-  ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_DEFAULT, 1, 
-          &device_id, &ret_num_devices);
-
-  // Create an OpenCL context
-  cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret);
-
-  // Set up opencl buffers
-  cl_mem in_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, 
-          MEM_SIZE*INPUT_SIZE * sizeof(float), in_data, &ret);
-  cl_mem out_mem_obj = clCreateBuffer(context, CL_MEM_HOST_WRITE_ONLY,
-          NUM_MOTORS * sizeof(_Float16), out_data, &ret);
+  float in_data[INPUT_SIZE*MEM_SIZE];
+  int64_t in_dim[] = {1,MEM_SIZE,INPUT_SIZE};
+  float out_data[NUM_MOTORS];
+  int64_t out_dim[] = {1,NUM_MOTORS};
+  DLDataType f32_t = {kDLFloat, 32, 1};
+  DLDataType f16_t = {kDLFloat, 16, 1};
 
   // TVM buffers
-  DLTensor in = {in_data, device, 2, f32_t, in_dim, nullptr, 0};
-  DLTensor out = {out_data, device, 2, f16_t, out_dim, nullptr, 0};
+  DLTensor in = {in_data, device, 3, f32_t, in_dim, nullptr, 0};
+  DLTensor out = {out_data, device, 2, f32_t, out_dim, nullptr, 0};
 
   // Set up i2c
   // TODO do fd inside class
@@ -84,14 +68,6 @@ int main(int argc, char **argv) {
   std::string i2c_deviceName = "/dev/i2c-0";
   int fd = open(i2c_deviceName.c_str(), 0, O_RDWR);
   I2c i2c = I2c(fd);
-
-  // Set up throttle control
-  // printf("Init dshot\n");
-  // DShot dshot = DShot();
-  // uint8_t motor_pins[] = {12, 16, 20, 19};
-  // dshot.attach(motor_pins);
-  uint16_t throttles[4] = {0};
-  // std::thread dshot_thread(&DShot::run, &dshot);
 
   // Set up SPI
   printf("Init SPI\n");
@@ -115,22 +91,16 @@ int main(int argc, char **argv) {
   printf("Init ultrasonic\n");
   ULTRA ultra = ULTRA(&i2c);
   std::thread ultra_thread(&ULTRA::run, &ultra);
-  while (ultra.getAltitude() == -1)
-    continue;
 
   // Set up compass
   printf("Init compass\n");
   COMPASS compass = COMPASS(&i2c);
   std::thread compass_thread(&COMPASS::run, &compass);
-  while (compass.getZ() == -1)
-    continue;
 
   // Set up people detection
-  // printf("Init find-a-person\n");
-  // FINDP findp = FINDP(&spi);
-  // printf("Done init\n");
-  // std::thread findp_thread(&FINDP::run, &findp);
-  // printf("Thread start\n");
+  printf("Init find-a-person\n");
+  FINDP findp = FINDP();
+  std::thread findp_thread(&FINDP::run, &findp);
 
   // Set up sensor fusion
   printf("Init sensor fusion\n");
@@ -151,6 +121,9 @@ int main(int argc, char **argv) {
     start = std::chrono::high_resolution_clock::now();
 #endif
 
+    for(size_t elem = 0 ; elem < MEM_SIZE*INPUT_SIZE; ++elem)
+      in_data[elem] = (float)rand()/(float)RAND_MAX;
+
     // Run model
     exec.SetInput(0, &in);
     exec.Run();
@@ -158,11 +131,10 @@ int main(int argc, char **argv) {
 
     // Set motor throttles
     // TODO scale to sim
-    throttles[0] = out_data[0] * 2048;
-    throttles[1] = out_data[1] * 2048;
-    throttles[2] = out_data[2] * 2048;
-    throttles[3] = out_data[3] * 2048;
-    // dshot.setThrottles(throttles);
+    // throttles[0] = out_data[0] * 2048;
+    // throttles[1] = out_data[1] * 2048;
+    // throttles[2] = out_data[2] * 2048;
+    // throttles[3] = out_data[3] * 2048;
 
 #if DEBUG
     stop = std::chrono::high_resolution_clock::now();
@@ -187,14 +159,12 @@ int main(int argc, char **argv) {
   
   // Close out all threads
   printf("Closing out...\n");
-  // dshot.running = false;
   gps.running = false;
   mpu.running = false;
   ultra.running = false;
   compass.running = false;
   // findp.running = false;
   fuse.running = false;
-  // dshot_thread.join();
   gps_thread.join();
   mpu_thread.join();
   ultra_thread.join();
