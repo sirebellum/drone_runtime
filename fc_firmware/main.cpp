@@ -69,11 +69,6 @@ int main(int argc, char **argv) {
   int fd = open(i2c_deviceName.c_str(), 0, O_RDWR);
   I2c i2c = I2c(fd);
 
-  // Set up SPI
-  printf("Init SPI\n");
-  std::string spi_deviceName = "/dev/spidev0.0";
-  SPI spi = SPI(spi_deviceName.c_str());
-
   // Set up GPS
   printf("Init GPS\n");
   GPS gps = GPS();
