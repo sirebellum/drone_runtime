@@ -21,13 +21,13 @@ public:
   void run();
   bool running;
 
-  // Return raw values
-  int16_t getGyroX() {return *x_gyro;}
-  int16_t getGyroY() {return *y_gyro;}
-  int16_t getGyroZ() {return *z_gyro;}
-  int16_t getAccX() {return *x_accel;}
-  int16_t getAccY() {return *y_accel;}
-  int16_t getAccZ() {return *z_accel;}
+  // Return converted values
+  float getGyroX() {return (float)*x_gyro/131;}
+  float getGyroY() {return (float)*y_gyro/131;}
+  float getGyroZ() {return (float)*z_gyro/131;}
+  float getAccX() {return (float)*x_accel/16384;}
+  float getAccY() {return (float)*y_accel/16384;}
+  float getAccZ() {return (float)*z_accel/16384;}
 
 private:
 
