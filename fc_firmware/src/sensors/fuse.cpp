@@ -4,6 +4,8 @@
 #include <sensors/fuse/NXPfusion.h>
 #include <chrono>
 
+#define SAMPLE_RATE 400
+
 FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
 
   // Set up sensor pointers
@@ -24,7 +26,7 @@ FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
   this->Vz = buffer+8;
 
   // Set up AHRS
-  ahrs.begin();
+  ahrs.begin(SAMPLE_RATE);
   ahrs.setQuaternion(0,0,0,1);
 
   this->running = true;
@@ -33,24 +35,18 @@ FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
 FUSE::~FUSE() {}
 
 void FUSE::run() {
-  auto start = std::chrono::high_resolution_clock::now();
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
-    start = std::chrono::high_resolution_clock::now();
 
-    // Set internal values (maps correct axes)
-    this->Wx = ((float)this->mpu->getGyroX())/32767*250;
-    this->Wy = ((float)this->mpu->getGyroY())/32767*250;
-    this->Wz = ((float)this->mpu->getGyroZ())/32767*250;
-    this->Ax = ((float)this->mpu->getAccX())/32767*2;
-    this->Ay = ((float)this->mpu->getAccY())/32767*2;
-    this->Az = ((float)this->mpu->getAccZ())/32767*2;
-    this->Gx = ((float)this->compass->getX())/8192*7.2/1000;
-    this->Gy = ((float)this->compass->getY())/8192*7.2/1000;
-    this->Gz = ((float)this->compass->getZ())/8192*7.2/1000;
-
-    // printf("Acc: %d %d %d\n", mpu->getAccX(), mpu->getAccY(), mpu->getAccZ());
+    // Set internal values (sets correct units)
+    Wx = ((float)mpu->getGyroX())/131;
+    Wy = ((float)mpu->getGyroY())/131;
+    Wz = ((float)mpu->getGyroZ())/131;
+    Ax = ((float)mpu->getAccX())/16384;
+    Ay = ((float)mpu->getAccY())/16384;
+    Az = ((float)mpu->getAccZ())/16384;
+    Gx = ((float)compass->getX())*0.150;
+    Gy = ((float)compass->getY())*0.150;
+    Gz = ((float)compass->getZ())*0.150;
 
     // Update flight model
     ahrs.update(Wx, Wy, Wz,
@@ -70,14 +66,9 @@ void FUSE::run() {
     *this->Vy = 0;
     *this->Vz = 0;
 
-    // Keep in time (120Hz)
-    stop = std::chrono::high_resolution_clock::now();
-    duration = duration_cast<std::chrono::microseconds>(stop - start);
-    while (duration.count() < 8333) {
-      stop = std::chrono::high_resolution_clock::now();
-      duration = duration_cast<std::chrono::microseconds>(stop - start);
-      usleep(10);
-    }
-    // std::cout << duration.count() << "us fuse\n";
+    // printf("R %.3f  P %.3f  Y %.3f\n", *this->R, *this->P, *this->Y);
+    // printf("Wx %.3f Wy %.3f  Wz %.3f\n", getWx(), getWy(), getWz());
+    // printf("Ax %.3f Ay %.3f  Az %.3f\n", getAx(), getAy(), getAz());
+    // printf("Cx %.3f Cy %.3f  Cz %.3f\n", getGx()*1000, getGy()*1000, getGz()*1000);
   }
 }

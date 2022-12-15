@@ -60,9 +60,6 @@ float GPS::getLongitude() {
 }
 
 void GPS::run() {
-  auto start = std::chrono::high_resolution_clock::now();
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
     while (gps_waiting(&this->gps_data, 5000000)) {
       if (-1 == gps_read(&this->gps_data, NULL, 0)) {
@@ -97,16 +94,6 @@ void GPS::run() {
       // } else {
       // printf("Lat n/a Lon n/a\n");
       // }
-
-    // Keep in time (120Hz)
-    stop = std::chrono::high_resolution_clock::now();
-    duration = duration_cast<std::chrono::microseconds>(stop - start);
-    while (duration.count() < 8333) {
-      stop = std::chrono::high_resolution_clock::now();
-      duration = duration_cast<std::chrono::microseconds>(stop - start);
-      usleep(10);
-    }
-    // std::cout << duration.count() << "us gps\n";
     }
   }
 }

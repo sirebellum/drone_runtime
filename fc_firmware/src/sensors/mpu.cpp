@@ -2,10 +2,9 @@
 #include <sensors/mpu.h>
 #include <unistd.h>
 #include <ctime> 
-#include <chrono>
 
 
-#define REG_CONFIG 0x1A
+#define REG_NOISE_CONFIG 0x1A
 #define REG_FIFO_CONFIG 0x23
 #define REG_FIFO_DATA 0x74
 #define REG_FIFO_COUNT_L 0x73
@@ -24,6 +23,8 @@
 #define REG_ACCEL_Y 0x3D
 #define REG_ACCEL_Z 0x3F
 
+#define SAMPLE_RATE 400
+
 MPU::MPU(I2c *i2c_interface) {
   this->i2c = i2c_interface;
 
@@ -35,7 +36,7 @@ MPU::MPU(I2c *i2c_interface) {
   if (this->i2c->addressSet(this->address) == -1)
     printf("Unable to open mpu sensor i2c address...\n");
 
-  // Reset
+  // Set
   this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b00000000);
 
   // Enable fifo
@@ -44,6 +45,9 @@ MPU::MPU(I2c *i2c_interface) {
 
   this->i2c->writeRegisterByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeRegisterByte(REG_GYRO_CONFIG, 0x00);
+
+  // Lower noise
+  this->i2c->writeRegisterByte(REG_NOISE_CONFIG, 0x01);
 
   this->running = true;
   this->i2c->locked = false;
@@ -142,42 +146,21 @@ void MPU::read() {
   *x_accel = two_complement_to_int(*accel_x_h, *accel_x_l) - *x_acc_offset;
   *y_accel = two_complement_to_int(*accel_y_h, *accel_y_l) - *y_acc_offset;
   *z_accel = two_complement_to_int(*accel_z_h, *accel_z_l) - *z_acc_offset;
-
-  timestamp += 1;
 }
 
 void MPU::run() {
-  auto start = std::chrono::high_resolution_clock::now();
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
   while (this->running) {
-    start = std::chrono::high_resolution_clock::now();
-
     // Wait for lock on i2c
     while (this->i2c->locked)
       usleep(100);
     this->i2c->locked = true;
 
-    if (this->i2c->addressSet(this->address) == -1) {
-      this->i2c->locked = false;
-      printf("Unable to open mpu sensor i2c address...\n");
-      usleep(100);
-      continue;
-    }
-
-    // Read and store in memory
+    this->i2c->addressSet(this->address);
     this->read();
 
     this->i2c->locked = false;
 
-    // Keep in time (120Hz)
-    stop = std::chrono::high_resolution_clock::now();
-    duration = duration_cast<std::chrono::microseconds>(stop - start);
-    while (duration.count() < 8333) {
-      stop = std::chrono::high_resolution_clock::now();
-      duration = duration_cast<std::chrono::microseconds>(stop - start);
-      usleep(10);
-    }
-    // std::cout << duration.count() << "us mpu\n";
+    // Keep in time
+    usleep(1/SAMPLE_RATE*1000000);
   }
 }

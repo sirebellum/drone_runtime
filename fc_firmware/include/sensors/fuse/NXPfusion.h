@@ -155,7 +155,7 @@ public:
   // float getPitch() {return atan2f(2.0f * qPl.q2 * qPl.q3 - 2.0f * qPl.q0 *
   // qPl.q1, 2.0f * qPl.q0 * qPl.q0 + 2.0f * qPl.q3 * qPl.q3 - 1.0f);}; float
   // getRoll() {return -1.0f * asinf(2.0f * qPl.q1 * qPl.q3 + 2.0f * qPl.q0 *
-  // qPl.q2);}; float getYaw() {return atan2f(2.0f * qPl.q1 * qPl.q2 - 2.0f *
+  // qPl.q2);}; float getYaww() {return atan2f(2.0f * qPl.q1 * qPl.q2 - 2.0f *
   // qPl.q0 * qPl.q3, 2.0f * qPl.q0 * qPl.q0 + 2.0f * qPl.q1 * qPl.q1 - 1.0f);};
 
 private:

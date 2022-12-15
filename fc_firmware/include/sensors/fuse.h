@@ -8,6 +8,7 @@
 #include <sensors/gps.h>
 #include <sensors/ultra.h>
 #include <sensors/fuse/NXPfusion.h>
+#include <atomic>
 
 class FUSE {
 public:
@@ -45,9 +46,9 @@ private:
   NXPSensorFusion ahrs;
 
   // Output values
-  float* x, *y, *z;
-  float* R, *P, *Y;
-  float* Vx, *Vy, *Vz;
+  float *x, *y, *z;
+  float *R, *P, *Y;
+  float *Vx, *Vy, *Vz;
 
   // Local values
   float Ax, Ay, Az;
