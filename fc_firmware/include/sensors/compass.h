@@ -18,7 +18,6 @@ public:
   int16_t getX() {return *this->x;}
   int16_t getY() {return *this->y;}
   int16_t getZ() {return *this->z;}
-  void calibrate();
   bool running;
   
 
@@ -32,9 +31,4 @@ private:
   int16_t *x = buffer+0;
   int16_t *y = buffer+1;
   int16_t *z = buffer+2;
-
-  int16_t offset_buffer[3];
-  int16_t *x_offset = offset_buffer+0;
-  int16_t *y_offset = offset_buffer+1;
-  int16_t *z_offset = offset_buffer+2;
 };

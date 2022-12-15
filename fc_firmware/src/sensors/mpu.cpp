@@ -22,6 +22,10 @@
 #define REG_ACCEL_X 0x3B
 #define REG_ACCEL_Y 0x3D
 #define REG_ACCEL_Z 0x3F
+#define REG_I2C_MST_CTRL 0x24
+#define REG_I2C_SLV0_ADDR 0x25
+#define REG_I2C_SLV0_REG 0x25
+#define REG_I2C_SLV0_CTRL 0x25
 
 #define SAMPLE_RATE 400
 
@@ -40,9 +44,10 @@ MPU::MPU(I2c *i2c_interface) {
   this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b00000000);
 
   // Enable fifo
-  // this->i2c->writeRegisterByte(REG_USER_CTRL, 0b01000100);
+  this->i2c->writeRegisterByte(REG_USER_CTRL, 0b01000000);
   // this->i2c->writeRegisterByte(REG_FIFO_CONFIG, 0b01111000);
 
+  // Set up data ranges
   this->i2c->writeRegisterByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeRegisterByte(REG_GYRO_CONFIG, 0x00);
 
@@ -85,45 +90,9 @@ void MPU::calibrate() {
   *x_acc_offset = 0;
   *y_acc_offset = 0;
   *z_acc_offset = 0;
-
-  // Wait for lock on i2c
-  while (this->i2c->locked)
-    usleep(100);
-  this->i2c->locked = true;
-
-  if (this->i2c->addressSet(this->address) == -1) {
-    this->i2c->locked = false;
-    printf("Unable to open mpu sensor i2c address...\n");
-    return;
-  }
-
-  // Sample gyro/acc output and calculate average offset
-  printf("Sampling...\n");
-  int nsamples = 512;
-  int sum;
-  int16_t tmp[512];
-  for (size_t axis = 0; axis < 6; axis++) {
-    sum = 0;
-    for (size_t s = 0; s < nsamples; s++) {
-      this->read();
-      tmp[s] = this->buffer[axis];
-      sum += tmp[s];
-    }
-    // get average
-    this->offset_buffer[axis] = sum/nsamples;
-  }
-
-  *z_acc_offset += 16383; // gravity 
-
-  printf("Offsets gyro: %d %d %d\n", *x_gyro_offset,*y_gyro_offset, *z_gyro_offset);
-  printf("Offsets acc: %d %d %d\n", *x_acc_offset,*y_acc_offset, *z_acc_offset);
-
-  this->i2c->locked = false;
 }
 
 void MPU::read() {
-
-  this->i2c->readRegisterBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
 
   *gyro_x_h = i2c->readRegisterByte(REG_GYRO_X);
   *gyro_x_l = i2c->readRegisterByte(REG_GYRO_X+1);

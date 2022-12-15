@@ -2,7 +2,6 @@
 #include <string>
 #include <atomic>
 
-#include <sensors/fuse.h>
 #include <findp.h>
 #include <tvm/runtime/module.h>
 #include <tvm/runtime/graph_executor.h>
@@ -14,10 +13,10 @@
 #include <chrono>
 #include <thread>
 
-#define DEBUG false
+#define DEBUG true
 #define MEM_SIZE 6
 #define NUM_MOTORS 4
-#define INPUT_SIZE 3+3 // x y z R P Y
+#define INPUT_SIZE 3+4 // x y z Qx Qy Qz Qw
 
 // Define the function to be called when ctrl-c (SIGINT) is sent to process
 int interrupt;
@@ -87,19 +86,12 @@ int main(int argc, char **argv) {
   // Set up compass
   printf("Init compass\n");
   COMPASS compass = COMPASS(&i2c);
-  printf("Calibrating...\n");
-  compass.calibrate();
   std::thread compass_thread(&COMPASS::run, &compass);
 
   // Set up people detection
   printf("Init find-a-person\n");
   FINDP findp = FINDP();
   std::thread findp_thread(&FINDP::run, &findp);
-
-  // Set up sensor fusion
-  printf("Init sensor fusion\n");
-  FUSE fuse = FUSE(&mpu, &compass, &gps, &ultra, in_data);
-  std::thread fuse_thread(&FUSE::run, &fuse);
 
   // Runtime loop
   printf("Running...\n");
@@ -124,10 +116,9 @@ int main(int argc, char **argv) {
     // printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            // out_data[3]);
     // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
-    printf("R %.3f  P %.3f  Y %.3f\n", in_data[3], in_data[4], in_data[5]);
     // printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
     // printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
-    // printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx()*1000, fuse.getGy()*1000, fuse.getGz()*1000);
+    // printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
     // printf("Altitude raw %d\n", ultra.getAltitude());
     // printf("===========================\n");
 #endif

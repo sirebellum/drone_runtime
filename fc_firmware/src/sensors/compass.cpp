@@ -9,6 +9,9 @@
 #define REG_COMP_X 0x10
 #define REG_COMP_Y 0x12
 #define REG_COMP_Z 0x14
+#define REG_DRIFT_X 0x20
+#define REG_DRIFT_Y 0x22
+#define REG_DRIFT_Z 0x24
 
 #define SAMPLE_RATE 100
 
@@ -19,7 +22,7 @@ COMPASS::COMPASS(I2c *i2c_interface) {
     printf("Unable to open compass sensor i2c address...\n");
 
   // 100hz reading mode, start
-  this->i2c->writeRegisterByte(REG_CTRL1, 0b10110100);
+  this->i2c->writeRegisterByte(REG_CTRL1, 0b10011000);
   // Enable fifo
   // this->i2c->writeByte(REG_CTRL1, 0x10);
   // Control register
@@ -48,46 +51,6 @@ int16_t min(int16_t* begin, int16_t* end) {
   return min;
 }
 
-void COMPASS::calibrate() {
-
-  // // Set offset and scale to 0 and 1 resp
-  // *x_offset = 0;
-  // *y_offset = 0;
-  // *z_offset = 0;
-
-  // // Wait for lock on i2c
-  // while (this->i2c->locked)
-  //   usleep(100);
-  // this->i2c->locked = true;
-
-  // if (this->i2c->addressSet(this->address) == -1) {
-  //   this->i2c->locked = false;
-  //   printf("Unable to open mpu sensor i2c address...\n");
-  //   return;
-  // }
-
-  // // Sample mag output
-  // printf("Sampling...\n");
-  // int nsamples = 512;
-  // int sum;
-  // int16_t tmp[512];
-  // for (size_t axis = 0; axis < 3; axis++) {
-  //   sum = 0;
-  //   for (size_t s = 0; s < nsamples; s++) {
-  //     this->read();
-  //     tmp[s] = this->buffer[axis];
-  //     sum += tmp[s];
-  //   }
-  //   // get average
-  //   this->offset_buffer[axis] = sum/nsamples;
-  // }
-
-  // this->i2c->locked = false;
-
-  // printf("Offsets mag: %d %d %d\n", *x_offset, *y_offset, *z_offset);
-
-}
-
 int16_t COMPASS::two_complement_to_int(uint8_t LSB, uint8_t MSB) {
   uint16_t uword;
   uint16_t sword;
@@ -107,15 +70,24 @@ void COMPASS::read(){
   // Read for all 3 axes
   lower_byte = this->i2c->readRegisterByte(REG_COMP_X);
   upper_byte = this->i2c->readRegisterByte(REG_COMP_X+1);
-  *this->x = two_complement_to_int(lower_byte, upper_byte) - *x_offset;
+  *this->x = two_complement_to_int(lower_byte, upper_byte);
+  lower_byte = this->i2c->readRegisterByte(REG_DRIFT_X);
+  upper_byte = this->i2c->readRegisterByte(REG_DRIFT_X+1);
+  *this->x += two_complement_to_int(lower_byte, upper_byte);
 
   lower_byte = this->i2c->readRegisterByte(REG_COMP_Y);
   upper_byte = this->i2c->readRegisterByte(REG_COMP_Y+1);
-  *this->y = two_complement_to_int(lower_byte, upper_byte) - *y_offset;
+  *this->y = two_complement_to_int(lower_byte, upper_byte);
+  lower_byte = this->i2c->readRegisterByte(REG_DRIFT_Y);
+  upper_byte = this->i2c->readRegisterByte(REG_DRIFT_Y+1);
+  *this->x += two_complement_to_int(lower_byte, upper_byte);
 
   lower_byte = this->i2c->readRegisterByte(REG_COMP_Z);
   upper_byte = this->i2c->readRegisterByte(REG_COMP_Z+1);
-  *this->z = two_complement_to_int(lower_byte, upper_byte) - *z_offset;
+  *this->z = two_complement_to_int(lower_byte, upper_byte);
+  lower_byte = this->i2c->readRegisterByte(REG_DRIFT_Z);
+  upper_byte = this->i2c->readRegisterByte(REG_DRIFT_Z+1);
+  *this->x += two_complement_to_int(lower_byte, upper_byte);
 }
 
 uint16_t COMPASS::merge_bytes(uint8_t LSB, uint8_t MSB) {
