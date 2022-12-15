@@ -13,6 +13,12 @@
 #include <chrono>
 #include <thread>
 
+#include <io/i2c.h>
+#include <sensors/gps.h>
+#include <sensors/mpu.h>
+#include <sensors/ultra.h>
+#include <sensors/compass.h>
+
 #define DEBUG true
 #define MEM_SIZE 6
 #define NUM_MOTORS 4
@@ -24,8 +30,6 @@ void signal_callback_handler(int signum) {
    std::cout << "Caught signal " << signum << std::endl;
    interrupt = signum;
 }
-
-int abs(int v) { return v * ((v > 0) - (v < 0)); }
 
 int main(int argc, char **argv) {
 
@@ -74,7 +78,6 @@ int main(int argc, char **argv) {
   // Set up acceleromter
   printf("Init acceleromter\n");
   MPU mpu = MPU(&i2c);
-  printf("Calibrating...\n");
   mpu.calibrate();
   std::thread mpu_thread(&MPU::run, &mpu);
 
@@ -116,28 +119,11 @@ int main(int argc, char **argv) {
     // printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            // out_data[3]);
     // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
-    // printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
-    // printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
+    printf("Wx %d Wy %d  Wz %d\n", mpu.getGyroX(), mpu.getGyroY(), mpu.getGyroZ());
+    printf("Ax %d Ay %d  Az %d\n", mpu.getAccX(), mpu.getAccY(), mpu.getAccZ());
     // printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
     // printf("Altitude raw %d\n", ultra.getAltitude());
     // printf("===========================\n");
 #endif
   }
-  
-  // Close out all threads
-  printf("Closing out...\n");
-  gps.running = false;
-  mpu.running = false;
-  ultra.running = false;
-  compass.running = false;
-  // findp.running = false;
-  fuse.running = false;
-  gps_thread.join();
-  mpu_thread.join();
-  ultra_thread.join();
-  compass_thread.join();
-  // findp_thread.join();
-  fuse_thread.join();
-
-  exit(interrupt);
 }

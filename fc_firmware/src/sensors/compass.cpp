@@ -42,6 +42,10 @@ int16_t max(int16_t* begin, int16_t* end) {
   return max;
 }
 
+void COMPASS::calibrate() {
+  
+}
+
 int16_t min(int16_t* begin, int16_t* end) {
   size_t size = end - begin;
   int16_t min = begin[0];

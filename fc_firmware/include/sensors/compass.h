@@ -18,6 +18,7 @@ public:
   int16_t getX() {return *this->x;}
   int16_t getY() {return *this->y;}
   int16_t getZ() {return *this->z;}
+  void calibrate();
   bool running;
   
 

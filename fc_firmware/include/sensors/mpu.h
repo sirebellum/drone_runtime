@@ -32,13 +32,13 @@ public:
 private:
 
   // Final values
-  std::atomic<int16_t> buffer[6];
-  std::atomic<int16_t> *x_gyro = buffer+0;
-  std::atomic<int16_t> *y_gyro = buffer+1;
-  std::atomic<int16_t> *z_gyro = buffer+2;
-  std::atomic<int16_t> *x_accel = buffer+3;
-  std::atomic<int16_t> *y_accel = buffer+4;
-  std::atomic<int16_t> *z_accel = buffer+5;
+  int16_t buffer[6];
+  int16_t *x_gyro = buffer+0;
+  int16_t *y_gyro = buffer+1;
+  int16_t *z_gyro = buffer+2;
+  int16_t *x_accel = buffer+3;
+  int16_t *y_accel = buffer+4;
+  int16_t *z_accel = buffer+5;
 
   // Intermediate values
   uint8_t fifo_buffer[12];
@@ -57,11 +57,10 @@ private:
   uint8_t *accel_z_l = fifo_buffer+11;
 
   // Offsets for signals
-  int16_t offset_buffer[6];
-  int16_t *x_gyro_offset = offset_buffer+0;
-  int16_t *y_gyro_offset = offset_buffer+1;
-  int16_t *z_gyro_offset = offset_buffer+2;
-  int16_t *x_acc_offset = offset_buffer+3;
-  int16_t *y_acc_offset = offset_buffer+4;
-  int16_t *z_acc_offset = offset_buffer+5;
+  int16_t x_gyro_offset = 0;
+  int16_t y_gyro_offset = 0;
+  int16_t z_gyro_offset = 0;
+  int16_t x_acc_offset = 0;
+  int16_t y_acc_offset = 0;
+  int16_t z_acc_offset = 0;
 };

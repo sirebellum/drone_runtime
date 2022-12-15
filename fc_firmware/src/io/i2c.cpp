@@ -117,5 +117,10 @@ int I2c::readRegisterBlock(__u8 command, size_t size, __u8 *data) {
   msgset.nmsgs = 2;
 
   int result = ioctl(fd, I2C_RDWR, &msgset);
+  while (result == -1) {
+    std::cout << "I2C: Failed to write data byte to I2c, retrying" << std::endl;
+    usleep(10);
+    result = ioctl(fd, I2C_RDWR, &msgset);
+  }
   return result;
 }
