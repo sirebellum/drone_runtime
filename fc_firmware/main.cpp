@@ -8,7 +8,6 @@
 #include <dlpack/dlpack.h>
 
 #include <fstream>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <chrono>
@@ -34,11 +33,11 @@ int main(int argc, char **argv) {
   interrupt = 0;
 
   // Set up tvm runtime
-  std::string so = "/home/drone/firmware/fc.so";
+  std::string so = "/home/drone/firmware/models/fc.so";
   printf("Loading %s\n", so.c_str());
   tvm::runtime::Module mod = tvm::runtime::Module::LoadFromFile(so.c_str(), "so");
 
-  std::ifstream graph_json("/home/drone/firmware/fc.json");
+  std::ifstream graph_json("/home/drone/firmware/models/fc.json");
   std::stringstream json;
   json << graph_json.rdbuf();
   printf("Init fc graph exec\n");
@@ -64,8 +63,7 @@ int main(int argc, char **argv) {
   // TODO do fd inside class
   printf("Init I2c\n");
   std::string i2c_deviceName = "/dev/i2c-0";
-  int fd = open(i2c_deviceName.c_str(), 0, O_RDWR);
-  I2c i2c = I2c(fd);
+  I2c i2c = I2c(i2c_deviceName.c_str());
 
   // Set up GPS
   printf("Init GPS\n");
@@ -88,6 +86,8 @@ int main(int argc, char **argv) {
   // Set up compass
   printf("Init compass\n");
   COMPASS compass = COMPASS(&i2c);
+  printf("Calibrating...\n");
+  compass.calibrate();
   std::thread compass_thread(&COMPASS::run, &compass);
 
   // Set up people detection
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     printf("R %.3f  P %.3f  Y %.3f\n", in_data[3], in_data[4], in_data[5]);
     printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
     printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
-    printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
+    printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx()*1000, fuse.getGy()*1000, fuse.getGz()*1000);
     printf("Altitude raw %d\n", ultra.getAltitude());
     printf("===========================\n");
 #endif
@@ -156,8 +156,6 @@ int main(int argc, char **argv) {
   compass_thread.join();
   // findp_thread.join();
   fuse_thread.join();
-
-  close(fd);
 
   exit(interrupt);
 }

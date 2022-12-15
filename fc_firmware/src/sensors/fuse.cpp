@@ -25,6 +25,7 @@ FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
 
   // Set up AHRS
   ahrs.begin();
+  ahrs.setQuaternion(0,0,0,1);
 
   this->running = true;
 }
@@ -38,16 +39,18 @@ void FUSE::run() {
   while (this->running) {
     start = std::chrono::high_resolution_clock::now();
 
-    // Set internal values
-    this->Wx = (float)this->mpu->getGyroX()/32767*250;
-    this->Wy = (float)this->mpu->getGyroY()/32767*250;
-    this->Wz = (float)this->mpu->getGyroZ()/32767*250;
-    this->Ax = (float)this->mpu->getAccX()/32767*2;
-    this->Ay = (float)this->mpu->getAccY()/32767*2;
-    this->Az = (float)this->mpu->getAccZ()/32767*2;
-    this->Gx = (float)this->compass->getX()/2048*1.3*100;
-    this->Gy = (float)this->compass->getY()/2048*1.3*100;
-    this->Gz = (float)this->compass->getZ()/2048*1.3*100;
+    // Set internal values (maps correct axes)
+    this->Wx = ((float)this->mpu->getGyroX())/32767*250;
+    this->Wy = ((float)this->mpu->getGyroY())/32767*250;
+    this->Wz = ((float)this->mpu->getGyroZ())/32767*250;
+    this->Ax = ((float)this->mpu->getAccX())/32767*2;
+    this->Ay = ((float)this->mpu->getAccY())/32767*2;
+    this->Az = ((float)this->mpu->getAccZ())/32767*2;
+    this->Gx = ((float)this->compass->getX())/8192*7.2/1000;
+    this->Gy = ((float)this->compass->getY())/8192*7.2/1000;
+    this->Gz = ((float)this->compass->getZ())/8192*7.2/1000;
+
+    // printf("Acc: %d %d %d\n", mpu->getAccX(), mpu->getAccY(), mpu->getAccZ());
 
     // Update flight model
     ahrs.update(Wx, Wy, Wz,

@@ -13,7 +13,7 @@
 
 class I2c {
 public:
-  I2c(int fd);
+  I2c(const char* deviceName);
   ~I2c();
   int addressSet(uint8_t address);
   int read();

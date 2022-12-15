@@ -24,9 +24,9 @@ public:
   int16_t getGyroX() {return *x_gyro;}
   int16_t getGyroY() {return *y_gyro;}
   int16_t getGyroZ() {return *z_gyro;}
-  int16_t getAccX() {return *x_accel_g;}
-  int16_t getAccY() {return *y_accel_g;}
-  int16_t getAccZ() {return *z_accel_g;}
+  int16_t getAccX() {return *x_accel;}
+  int16_t getAccY() {return *y_accel;}
+  int16_t getAccZ() {return *z_accel;}
 
   clock_t getTime() {return timestamp;}
 
@@ -37,12 +37,12 @@ private:
   int16_t *x_gyro = buffer+0;
   int16_t *y_gyro = buffer+1;
   int16_t *z_gyro = buffer+2;
-  int16_t *x_accel_g = buffer+3;
-  int16_t *y_accel_g = buffer+4;
-  int16_t *z_accel_g = buffer+5;
+  int16_t *x_accel = buffer+3;
+  int16_t *y_accel = buffer+4;
+  int16_t *z_accel = buffer+5;
 
   // Intermediate values
-  unsigned char fifo_buffer[12];
+  uint8_t fifo_buffer[12];
   uint8_t *gyro_x_h = fifo_buffer+0;
   uint8_t *gyro_x_l = fifo_buffer+1;
   uint8_t *gyro_y_h = fifo_buffer+2;
@@ -56,10 +56,9 @@ private:
   uint8_t *accel_y_l = fifo_buffer+9;
   uint8_t *accel_z_h = fifo_buffer+10;
   uint8_t *accel_z_l = fifo_buffer+11;
-  int16_t x_accel, y_accel, z_accel;
 
   // Offsets for signals
-  int16_t offset_buffer[6] = {0};
+  int16_t offset_buffer[6];
   int16_t *x_gyro_offset = offset_buffer+0;
   int16_t *y_gyro_offset = offset_buffer+1;
   int16_t *z_gyro_offset = offset_buffer+2;

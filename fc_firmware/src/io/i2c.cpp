@@ -3,13 +3,16 @@
 #include <linux/i2c.h>
 #include <iostream>
 #include <cstring>
+#include <fcntl.h>
 #include <unistd.h>
 
-I2c::I2c(int fd) {
-  this->fd = fd;
+I2c::I2c(const char* deviceName) {
+  this->fd = open(deviceName, 0, O_RDWR);
 }
 
-I2c::~I2c() {}
+I2c::~I2c() {
+  close(this->fd);
+}
 
 int I2c::addressSet(uint8_t address) {
   this->slave_sel = address;
@@ -42,18 +45,18 @@ int I2c::writeRawByte(__u8 data) {
 int I2c::writeRegisterByte(__u8 command, __u8 data) {
     uint8_t outbuf[2];
 
-    struct i2c_msg msgs[1];
+    struct i2c_msg msg;
     struct i2c_rdwr_ioctl_data msgset;
 
     outbuf[0] = command;
     outbuf[1] = data;
 
-    msgs[0].addr = this->slave_sel;
-    msgs[0].flags = 0;
-    msgs[0].len = 2;
-    msgs[0].buf = outbuf;
+    msg.addr = this->slave_sel;
+    msg.flags = 0;
+    msg.len = 2;
+    msg.buf = outbuf;
 
-    msgset.msgs = msgs;
+    msgset.msgs = &msg;
     msgset.nmsgs = 1;
 
   int result = ioctl(fd, I2C_RDWR, &msgset);
@@ -105,7 +108,6 @@ int I2c::readRegisterBlock(__u8 command, size_t size, __u8 *data) {
   msgs[0].len = 1;
   msgs[0].buf = &command;
 
-  memset(data, 0, size);
   msgs[1].addr = this->slave_sel;
   msgs[1].flags = I2C_M_RD;
   msgs[1].len = size;

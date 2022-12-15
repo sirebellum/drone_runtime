@@ -35,19 +35,15 @@ MPU::MPU(I2c *i2c_interface) {
   if (this->i2c->addressSet(this->address) == -1)
     printf("Unable to open mpu sensor i2c address...\n");
 
-  // Enable fifo
-  this->i2c->writeRegisterByte(REG_USER_CTRL, 0b01000101);
-  this->i2c->writeRegisterByte(REG_FIFO_CONFIG, 0b01111000);
+  // Reset
+  this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b00000000);
 
-  this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b10000000);
+  // Enable fifo
+  // this->i2c->writeRegisterByte(REG_USER_CTRL, 0b01000100);
+  // this->i2c->writeRegisterByte(REG_FIFO_CONFIG, 0b01111000);
+
   this->i2c->writeRegisterByte(REG_ACCEL_CONFIG, 0x00);
   this->i2c->writeRegisterByte(REG_GYRO_CONFIG, 0x00);
-
-  // Enable interrupts
-  // this->i2c->writeByte(REG_INTRPT_MGMT, 0x01);
-
-  // Set up bandwidth to something less noisy
-  this->i2c->writeRegisterByte(REG_CONFIG, 0x00);
 
   this->running = true;
   this->i2c->locked = false;
@@ -77,6 +73,15 @@ uint16_t MPU::merge_bytes(uint8_t LSB, uint8_t MSB) {
 }
 
 void MPU::calibrate() {
+  
+  // Set offsets to zero
+  *x_gyro_offset = 0;
+  *y_gyro_offset = 0;
+  *z_gyro_offset = 0;
+  *x_acc_offset = 0;
+  *y_acc_offset = 0;
+  *z_acc_offset = 0;
+
   // Wait for lock on i2c
   while (this->i2c->locked)
     usleep(100);
@@ -90,22 +95,24 @@ void MPU::calibrate() {
 
   // Sample gyro/acc output and calculate average offset
   printf("Sampling...\n");
-  size_t nsamples = 512;
-  int64_t sum;
+  int nsamples = 512;
+  int sum;
   int16_t tmp[512];
   for (size_t axis = 0; axis < 6; axis++) {
     sum = 0;
     for (size_t s = 0; s < nsamples; s++) {
       this->read();
       tmp[s] = this->buffer[axis];
+      sum += tmp[s];
     }
     // get average
-    for(size_t i=0;i<nsamples;++i) {sum+=tmp[i];}
     this->offset_buffer[axis] = sum/nsamples;
   }
 
-  printf("gyro offsets: %d %d %d\n", *x_gyro_offset, *y_gyro_offset, *z_gyro_offset);
-  printf("acc offsets: %d %d %d\n", *x_acc_offset, *y_acc_offset, *z_acc_offset);
+  *z_acc_offset += 16383; // gravity 
+
+  printf("Offsets gyro: %d %d %d\n", *x_gyro_offset,*y_gyro_offset, *z_gyro_offset);
+  printf("Offsets acc: %d %d %d\n", *x_acc_offset,*y_acc_offset, *z_acc_offset);
 
   this->i2c->locked = false;
 }
@@ -114,19 +121,29 @@ void MPU::read() {
 
   this->i2c->readRegisterBlock(REG_FIFO_DATA, 12, this->fifo_buffer);
 
-  *this->x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
-  *this->y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
-  *this->z_gyro = two_complement_to_int(*gyro_z_h, *gyro_z_l) - *z_gyro_offset;
+  *gyro_x_h = i2c->readRegisterByte(REG_GYRO_X);
+  *gyro_x_l = i2c->readRegisterByte(REG_GYRO_X+1);
+  *gyro_y_h = i2c->readRegisterByte(REG_GYRO_Y);
+  *gyro_y_l = i2c->readRegisterByte(REG_GYRO_Y+1);
+  *gyro_z_h = i2c->readRegisterByte(REG_GYRO_Z);
+  *gyro_z_l = i2c->readRegisterByte(REG_GYRO_Z+1);
 
-  this->x_accel = two_complement_to_int(*accel_x_h, *accel_x_l);
-  this->y_accel = two_complement_to_int(*accel_y_h, *accel_y_l);
-  this->z_accel = two_complement_to_int(*accel_z_h, *accel_z_l);
+  *accel_x_h = i2c->readRegisterByte(REG_ACCEL_X);
+  *accel_x_l = i2c->readRegisterByte(REG_ACCEL_X+1);
+  *accel_y_h = i2c->readRegisterByte(REG_ACCEL_Y);
+  *accel_y_l = i2c->readRegisterByte(REG_ACCEL_Y+1);
+  *accel_z_h = i2c->readRegisterByte(REG_ACCEL_Z);
+  *accel_z_l = i2c->readRegisterByte(REG_ACCEL_Z+1);
 
-  *this->x_accel_g = x_accel - *x_acc_offset;
-  *this->y_accel_g = y_accel - *y_acc_offset;
-  *this->z_accel_g = z_accel - *z_acc_offset + 16383; // Gravity
-  
-  this->timestamp += 1;
+  *x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - *x_gyro_offset;
+  *y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - *y_gyro_offset;
+  *z_gyro = two_complement_to_int(*gyro_z_h, *gyro_z_l) - *z_gyro_offset;
+
+  *x_accel = two_complement_to_int(*accel_x_h, *accel_x_l) - *x_acc_offset;
+  *y_accel = two_complement_to_int(*accel_y_h, *accel_y_l) - *y_acc_offset;
+  *z_accel = two_complement_to_int(*accel_z_h, *accel_z_l) - *z_acc_offset;
+
+  timestamp += 1;
 }
 
 void MPU::run() {
