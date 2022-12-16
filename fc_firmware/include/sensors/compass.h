@@ -21,6 +21,8 @@ public:
   void read();
   void calibrate();
   bool running;
+
+  std::chrono::microseconds duration;
   
 private:
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);

@@ -28,7 +28,7 @@
 #define REG_I2C_SLV0_REG 0x25
 #define REG_I2C_SLV0_CTRL 0x25
 
-#define SAMPLE_RATE 400
+#define SAMPLE_RATE 250
 
 MPU::MPU(I2c *i2c_interface) {
   this->i2c = i2c_interface;
@@ -124,6 +124,8 @@ void MPU::read() {
 
 void MPU::run() {
   while (this->running) {
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Wait for lock on i2c
     while (this->i2c->locked)
       usleep(100);
@@ -135,6 +137,7 @@ void MPU::run() {
     this->i2c->locked = false;
 
     // Keep in time
-    usleep(1.0/SAMPLE_RATE*1000000);
+    usleep(3500);
+    duration = duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
   }
 }

@@ -96,6 +96,8 @@ uint16_t COMPASS::merge_bytes(uint8_t LSB, uint8_t MSB) {
 
 void COMPASS::run() {
   while (this->running) {
+    auto start = std::chrono::high_resolution_clock::now();
+    
     // Wait for lock on i2c
     while (this->i2c->locked)
       usleep(100);
@@ -107,6 +109,7 @@ void COMPASS::run() {
     this->i2c->locked = false;
 
     // Keep in time
-    usleep(1.0/SAMPLE_RATE*1000000);
+    usleep(9000);
+    duration = duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
   }
 }

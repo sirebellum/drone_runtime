@@ -117,13 +117,15 @@ int main(int argc, char **argv) {
     // throttles[3] = out_data[3] * 2048;
 
 #if DEBUG
+    // std::cout << mpu.duration.count() << "us mpu\n";
+    // std::cout << compass.duration.count() << "us compass\n";
     // printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            // out_data[3]);
     // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
     printf("R %.3f P %.3f  Y %.3f\n", fuse.getRoll(), fuse.getPitch(), fuse.getYaw());
-    // printf("Wx %f Wy %f  Wz %f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
-    // printf("Ax %f Ay %f  Az %f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
-    // printf("Cx %f Cy %f  Cz %f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
+    printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
+    printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
+    printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
     // printf("Altitude raw %d\n", ultra.getAltitude());
     // printf("===========================\n");
 #endif

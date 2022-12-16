@@ -4,7 +4,7 @@
 #include <sensors/fuse/NXPfusion.h>
 #include <chrono>
 
-#define SAMPLE_RATE 400
+#define SAMPLE_RATE 200
 
 FUSE::FUSE(MPU* mpu, COMPASS* compass, GPS* gps, ULTRA* ultra, float *buffer) {
 

@@ -29,6 +29,8 @@ public:
   float getAccY() {return y_acc_scale*(*y_accel/16384.0) - y_acc_offset;}
   float getAccZ() {return z_acc_scale*(*z_accel/16384.0) - z_acc_offset;}
 
+  std::chrono::microseconds duration;
+
 private:
 
   // Final values
