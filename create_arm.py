@@ -17,7 +17,7 @@ target = tvm.target.arm_cpu(options=["-mattr=+neon,+vfp4",
                                      "-mtriple=armv7a-linux-gnueabihf"])
 
 input_name = "input"
-shape_dict = {input_name: (1, 6, 7)}
+shape_dict = {input_name: (1, 32, 7)}
 mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
 
 with tvm.transform.PassContext(opt_level=3, config={"tir.disable_assert": False}):

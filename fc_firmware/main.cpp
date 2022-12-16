@@ -15,7 +15,7 @@
 #include <thread>
 
 #define DEBUG true
-#define MEM_SIZE 6
+#define MEM_SIZE 32
 #define NUM_MOTORS 4
 #define INPUT_SIZE 3+4 // x y z Qx Qy Qz Qw
 
@@ -84,6 +84,7 @@ int main(int argc, char **argv) {
   // Set up compass
   printf("Init compass\n");
   COMPASS compass = COMPASS(&i2c);
+  compass.calibrate();
   std::thread compass_thread(&COMPASS::run, &compass);
 
   // Set up people detection
@@ -120,9 +121,9 @@ int main(int argc, char **argv) {
            // out_data[3]);
     // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
     printf("R %.3f P %.3f  Y %.3f\n", fuse.getRoll(), fuse.getPitch(), fuse.getYaw());
-    // printf("Wx %f Wy %f  Wz %f\n", mpu.getGyroX(), mpu.getGyroY(), mpu.getGyroZ());
-    // printf("Ax %f Ay %f  Az %f\n", mpu.getAccX(), mpu.getAccY(), mpu.getAccZ());
-    // printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
+    // printf("Wx %f Wy %f  Wz %f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
+    // printf("Ax %f Ay %f  Az %f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
+    // printf("Cx %f Cy %f  Cz %f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
     // printf("Altitude raw %d\n", ultra.getAltitude());
     // printf("===========================\n");
 #endif

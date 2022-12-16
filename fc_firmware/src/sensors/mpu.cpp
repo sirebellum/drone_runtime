@@ -38,8 +38,7 @@ MPU::MPU(I2c *i2c_interface) {
     usleep(100);
   this->i2c->locked = true;
 
-  if (this->i2c->addressSet(this->address) == -1)
-    printf("Unable to open mpu sensor i2c address...\n");
+  this->i2c->addressSet(this->address);
 
   // Set
   this->i2c->writeRegisterByte(REG_PWR_MGMT_1, 0b00000000);
@@ -136,6 +135,6 @@ void MPU::run() {
     this->i2c->locked = false;
 
     // Keep in time
-    usleep(1/SAMPLE_RATE*1000000);
+    usleep(1.0/SAMPLE_RATE*1000000);
   }
 }

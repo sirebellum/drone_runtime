@@ -6,7 +6,9 @@
 
 #include <io/i2c.h>
 #include <sensors/mpu.h>
+#include <sensors/compass.h>
 
+#include <algorithm>
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/numpy.h>
@@ -33,8 +35,9 @@ int main(int argc, char **argv) {
   mpufile.open ("mpu.cal");
 
   for (size_t s = 0; s < 2048; ++s)
-    mpu.read()
+    mpu.read();
 
+  ////////// GYRO ///////////
   // Get gyro calibration constants
   float gyro_x_offset, gyro_y_offset, gyro_z_offset;
   float sum;
@@ -72,11 +75,7 @@ int main(int argc, char **argv) {
 
   printf("Gyro offsets: %f %f %f\n", gyro_x_offset, gyro_y_offset, gyro_z_offset);
 
-
-  // Get acc calibration constants
-  std::vector<float> buffer;
-  std::vector<float> goal;
-
+  ////////// ACCEL ///////////
   // scipy optimize function
   py::scoped_interpreter guard{};
 
@@ -94,12 +93,16 @@ int main(int argc, char **argv) {
   py::function curve_fit = scipy.attr("curve_fit");
 
   for (size_t axis = 0; axis < 3; ++axis) {
+    // Get acc calibration constants
+    std::vector<float> acc_buffer;
+    std::vector<float> goal;
+
     // X axis
     std::cout << "Hold axis " << axis << " upward... (press enter)\n";
     std::getchar();
     for (size_t s = 0; s < nsamples; ++s) {
       mpu.read();
-      buffer.push_back(mpu.getAccX());
+      acc_buffer.push_back(mpu.getAccX());
       goal.push_back(1.0);
     }
 
@@ -108,7 +111,7 @@ int main(int argc, char **argv) {
     std::getchar();
     for (size_t s = 0; s < nsamples; ++s) {
       mpu.read();
-      buffer.push_back(mpu.getAccY());
+      acc_buffer.push_back(mpu.getAccY());
       goal.push_back(-1.0);
     }
 
@@ -117,12 +120,12 @@ int main(int argc, char **argv) {
     std::getchar();
     for (size_t s = 0; s < nsamples; ++s) {
       mpu.read();
-      buffer.push_back(mpu.getAccZ());
-      goal.push_back(1.0);
+      acc_buffer.push_back(mpu.getAccZ());
+      goal.push_back(0.0);
     }
 
     // Cast data to numpy arrays
-    py::array_t<float> pyXValues = py::cast(buffer);
+    py::array_t<float> pyXValues = py::cast(acc_buffer);
     py::array_t<float> pyYValues = py::cast(goal);
 
     // Call curve_fit
@@ -140,4 +143,47 @@ int main(int argc, char **argv) {
     mpufile << retValsStd[0] << " " << retValsStd[1] << " ";
   }
 
+
+  ////////// MAGNO ///////////
+  // Set up compass
+  // TODO figure out why compass is returning zeros
+  printf("Init compass\n");
+  COMPASS compass = COMPASS(&i2c);
+
+  // Get magnetic constants
+  std::cout << "Rotate around the x axis (press enter)\n";
+  nsamples = 2048*5;
+  std::getchar();
+  float magX_buffer[2048*5];
+  for (size_t s = 0; s < nsamples; ++s) {
+      compass.read();
+      magX_buffer[s] = compass.getX();
+    }
+  std::cout << "Rotate around the y axis (press enter)\n";
+  nsamples = 2048*5;
+  std::getchar();
+  float magY_buffer[2048*5];
+  for (size_t s = 0; s < nsamples; ++s) {
+      compass.read();
+      magY_buffer[s] = compass.getY();
+    }
+  std::cout << "Rotate around the z axis (press enter)\n";
+  nsamples = 2048*5;
+  std::getchar();
+  float magZ_buffer[2048*5];
+  for (size_t s = 0; s < nsamples; ++s) {
+      compass.read();
+      magZ_buffer[s] = compass.getZ();
+    }
+  float offset_mag_x = (*std::max_element(magX_buffer, magX_buffer+nsamples) + *std::min_element(magX_buffer, magX_buffer+nsamples)) / 2;
+  float offset_mag_y = (*std::max_element(magY_buffer, magY_buffer+nsamples) + *std::min_element(magY_buffer, magY_buffer+nsamples)) / 2;
+  float offset_mag_z = (*std::max_element(magZ_buffer, magZ_buffer+nsamples) + *std::min_element(magZ_buffer, magZ_buffer+nsamples)) / 2;
+
+  // Calibration file
+  std::ofstream magfile;
+  magfile.open("mag.cal");
+
+  printf("Mag offsets: %f %f %f\n", offset_mag_x, offset_mag_y, offset_mag_z);
+  magfile << offset_mag_x<<" "<<offset_mag_y<<" "<<offset_mag_z;
+  magfile.close();
 }

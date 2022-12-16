@@ -20,14 +20,10 @@ void ULTRA::run() {
   while (this->running) {
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(100);
+      usleep(1000);
     this->i2c->locked = true;
 
-    if (this->i2c->addressSet(this->address) == -1) {
-      printf("Unable to set ultrasonic sensor i2c address...\n");
-      usleep(100);
-      continue;
-    }
+    this->i2c->addressSet(this->address);
 
     // Initiate reading
     this->i2c->writeRawByte(81);
@@ -36,16 +32,11 @@ void ULTRA::run() {
 
     // Wait for lock on i2c
     while (this->i2c->locked)
-      usleep(100);
+      usleep(1000);
     this->i2c->locked = true;
 
     // Read
-    if (this->i2c->addressSet(this->address) == -1) {
-      this->i2c->locked = false;
-      printf("Unable to set ultrasonic sensor i2c address...\n");
-      usleep(100);
-      continue;
-    }
+    this->i2c->addressSet(this->address);
     this->i2c->readRawBlock(2, this->bytes);
     this->altitude =
         this->merge_bytes(this->bytes[1], this->bytes[0]);

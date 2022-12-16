@@ -15,18 +15,21 @@ public:
   I2c *i2c;
   int address = DEFAULT_COMPASS_ADDRESS;
   void run();
-  float getX() {return *this->x*0.15;}
-  float getY() {return *this->y*0.15;}
-  float getZ() {return *this->z*0.15;}
+  float getX() {return (float)(*this->x)*0.15 - x_offset;}
+  float getY() {return (float)(*this->y)*0.15 - y_offset;}
+  float getZ() {return (float)(*this->z)*0.15 - z_offset;}
+  void read();
   void calibrate();
   bool running;
   
-
 private:
   uint16_t merge_bytes(uint8_t LSB, uint8_t MSB);
   int16_t two_complement_to_int(uint8_t LSB, uint8_t MSB);
-  void read();
-  char upper_byte, lower_byte;
+  uint8_t upper_byte, lower_byte;
+
+  float x_offset = 0;
+  float y_offset = 0;
+  float z_offset = 0;
 
   int16_t buffer[3];
   int16_t *x = buffer+0;
