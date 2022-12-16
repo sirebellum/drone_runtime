@@ -6,18 +6,13 @@
 #include <tvm/runtime/module.h>
 #include <tvm/runtime/graph_executor.h>
 #include <dlpack/dlpack.h>
+#include <sensors/fuse.h>
 
 #include <fstream>
 #include <unistd.h>
 
 #include <chrono>
 #include <thread>
-
-#include <io/i2c.h>
-#include <sensors/gps.h>
-#include <sensors/mpu.h>
-#include <sensors/ultra.h>
-#include <sensors/compass.h>
 
 #define DEBUG true
 #define MEM_SIZE 6
@@ -96,6 +91,11 @@ int main(int argc, char **argv) {
   FINDP findp = FINDP();
   std::thread findp_thread(&FINDP::run, &findp);
 
+  // Set up sensor fusion
+  printf("Init sensor fusion\n");
+  FUSE fuse = FUSE(&mpu, &compass, &gps, &ultra, in_data);
+  std::thread fuse_thread(&FUSE::run, &fuse);
+
   // Runtime loop
   printf("Running...\n");
 #if DEBUG
@@ -119,8 +119,9 @@ int main(int argc, char **argv) {
     // printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
            // out_data[3]);
     // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
-    printf("Wx %d Wy %d  Wz %d\n", mpu.getGyroX(), mpu.getGyroY(), mpu.getGyroZ());
-    printf("Ax %d Ay %d  Az %d\n", mpu.getAccX(), mpu.getAccY(), mpu.getAccZ());
+    printf("R %.3f P %.3f  Y %.3f\n", fuse.getRoll(), fuse.getPitch(), fuse.getYaw());
+    // printf("Wx %f Wy %f  Wz %f\n", mpu.getGyroX(), mpu.getGyroY(), mpu.getGyroZ());
+    // printf("Ax %f Ay %f  Az %f\n", mpu.getAccX(), mpu.getAccY(), mpu.getAccZ());
     // printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
     // printf("Altitude raw %d\n", ultra.getAltitude());
     // printf("===========================\n");

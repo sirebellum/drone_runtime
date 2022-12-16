@@ -89,8 +89,11 @@ void MPU::calibrate() {
   myfile >> x_gyro_offset;
   myfile >> y_gyro_offset;
   myfile >> z_gyro_offset;
+  myfile >> x_acc_scale;
   myfile >> x_acc_offset;
+  myfile >> y_acc_scale;
   myfile >> y_acc_offset;
+  myfile >> z_acc_scale;
   myfile >> z_acc_offset;
   myfile.close();
 }
@@ -111,13 +114,13 @@ void MPU::read() {
   *accel_z_h = i2c->readRegisterByte(REG_ACCEL_Z);
   *accel_z_l = i2c->readRegisterByte(REG_ACCEL_Z+1);
 
-  *x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l) - x_gyro_offset;
-  *y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l) - y_gyro_offset;
-  *z_gyro = two_complement_to_int(*gyro_z_h, *gyro_z_l) - z_gyro_offset;
+  *x_gyro = two_complement_to_int(*gyro_x_h, *gyro_x_l);
+  *y_gyro = two_complement_to_int(*gyro_y_h, *gyro_y_l);
+  *z_gyro = two_complement_to_int(*gyro_z_h, *gyro_z_l);
 
-  *x_accel = two_complement_to_int(*accel_x_h, *accel_x_l) - x_acc_offset;
-  *y_accel = two_complement_to_int(*accel_y_h, *accel_y_l) - y_acc_offset;
-  *z_accel = two_complement_to_int(*accel_z_h, *accel_z_l) - z_acc_offset;
+  *x_accel = two_complement_to_int(*accel_x_h, *accel_x_l);
+  *y_accel = two_complement_to_int(*accel_y_h, *accel_y_l);
+  *z_accel = two_complement_to_int(*accel_z_h, *accel_z_l);
 }
 
 void MPU::run() {

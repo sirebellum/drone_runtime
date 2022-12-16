@@ -15,9 +15,9 @@ public:
   I2c *i2c;
   int address = DEFAULT_COMPASS_ADDRESS;
   void run();
-  int16_t getX() {return *this->x;}
-  int16_t getY() {return *this->y;}
-  int16_t getZ() {return *this->z;}
+  float getX() {return *this->x*0.15;}
+  float getY() {return *this->y*0.15;}
+  float getZ() {return *this->z*0.15;}
   void calibrate();
   bool running;
   

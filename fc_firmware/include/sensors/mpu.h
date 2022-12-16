@@ -22,12 +22,12 @@ public:
   bool running;
 
   // Return converted values
-  float getGyroX() {return (float)*x_gyro/131;}
-  float getGyroY() {return (float)*y_gyro/131;}
-  float getGyroZ() {return (float)*z_gyro/131;}
-  float getAccX() {return (float)*x_accel/16384;}
-  float getAccY() {return (float)*y_accel/16384;}
-  float getAccZ() {return (float)*z_accel/16384;}
+  float getGyroX() {return *x_gyro/131.0 - x_gyro_offset;}
+  float getGyroY() {return *y_gyro/131.0 - y_gyro_offset;}
+  float getGyroZ() {return *z_gyro/131.0 - z_gyro_offset;}
+  float getAccX() {return x_acc_scale*(*x_accel/16384.0) - x_acc_offset;}
+  float getAccY() {return y_acc_scale*(*y_accel/16384.0) - y_acc_offset;}
+  float getAccZ() {return z_acc_scale*(*z_accel/16384.0) - z_acc_offset;}
 
 private:
 
@@ -57,10 +57,13 @@ private:
   uint8_t *accel_z_l = fifo_buffer+11;
 
   // Offsets for signals
-  int16_t x_gyro_offset = 0;
-  int16_t y_gyro_offset = 0;
-  int16_t z_gyro_offset = 0;
-  int16_t x_acc_offset = 0;
-  int16_t y_acc_offset = 0;
-  int16_t z_acc_offset = 0;
+  float x_gyro_offset = 0;
+  float y_gyro_offset = 0;
+  float z_gyro_offset = 0;
+  float x_acc_scale = 1;
+  float y_acc_scale = 1;
+  float z_acc_scale = 1;
+  float x_acc_offset = 0;
+  float y_acc_offset = 0;
+  float z_acc_offset = 0;
 };
