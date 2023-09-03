@@ -21,6 +21,12 @@ public:
     // Shape of the sensor data
     std::vector<size_t> shape;
 
+    // Return sensor data
+    cv::Mat getData() {
+        return data;
+    }
+
+protected:
     // Sensor data
     cv::Mat data;
 };
@@ -35,7 +41,7 @@ public:
     void init();
 
     // Initialize the sensor group with list of sensors
-    void init(std::vector<Sensor> sensors);
+    void init(std::vector<Sensor>& sensors);
 
     // Add sensor
     void addSensor(Sensor sensor);
@@ -55,7 +61,7 @@ public:
 
     // Read the camera data
     void read();
-    
+
     // Write the camera data
     void write();
 

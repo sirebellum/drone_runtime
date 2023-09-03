@@ -14,13 +14,6 @@ void flight_controller_init(void)
     // ...
 }
 
-// Motor controller init
-void motor_controller_init(void)
-{
-    // Initialize the motor controller
-    // ...
-}
-
 // Communication init
 void communication_init(void)
 {
@@ -45,9 +38,10 @@ int main(void)
 {
     system_init();
     flight_controller_init();
-    motor_controller_init();
     communication_init();
     auto sensors = sensors_init();
+
+    Sensor camera = sensors.sensors[0];
 
     // Main loop
     while (1) {
@@ -57,16 +51,12 @@ int main(void)
       // Communicate with base station
       // ...
 
-      // Calculate flight path
+      // Update flight controller
       // ...
 
-      // Update motors with flight path
-      // ...
-
+      // Debug
+      camera.read();
+      camera.write();
       break;
     }
-
-    // Debug
-    sensors.sensors[0].write();
-
 }
