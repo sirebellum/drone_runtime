@@ -1,133 +1,72 @@
-#include <stdio.h>
-#include <string>
-#include <atomic>
+#include "sensor.h"
 
-#include <findp.h>
-#include <tvm/runtime/module.h>
-#include <tvm/runtime/graph_executor.h>
-#include <dlpack/dlpack.h>
-#include <sensors/fuse.h>
-
-#include <fstream>
-#include <unistd.h>
-
-#include <chrono>
-#include <thread>
-
-#define DEBUG true
-#define MEM_SIZE 32
-#define NUM_MOTORS 4
-#define INPUT_SIZE 3+4 // x y z Qx Qy Qz Qw
-
-// Define the function to be called when ctrl-c (SIGINT) is sent to process
-int interrupt;
-void signal_callback_handler(int signum) {
-   std::cout << "Caught signal " << signum << std::endl;
-   interrupt = signum;
+// System init
+void system_init(void)
+{
+    // Initialize the system
+    // ...
 }
 
-int main(int argc, char **argv) {
+// Flight controller init
+void flight_controller_init(void)
+{
+    // Initialize the flight controller
+    // ...
+}
 
-  // Set interrupt to zero
-  interrupt = 0;
+// Motor controller init
+void motor_controller_init(void)
+{
+    // Initialize the motor controller
+    // ...
+}
 
-  // Set up tvm runtime
-  std::string so = "/home/drone/firmware/models/fc.so";
-  printf("Loading %s\n", so.c_str());
-  tvm::runtime::Module mod = tvm::runtime::Module::LoadFromFile(so.c_str(), "so");
+// Communication init
+void communication_init(void)
+{
+    // Initialize the communication
+    // ...
+}
 
-  std::ifstream graph_json("/home/drone/firmware/models/fc.json");
-  std::stringstream json;
-  json << graph_json.rdbuf();
-  printf("Init fc graph exec\n");
-  tvm::runtime::GraphExecutor exec;
-  DLDevice device = {kDLCPU, 0};
-  std::vector<DLDevice> devices;
-  devices.push_back(device);
-  exec.Init(json.str(), mod, devices);
+// Sensors init
+SensorGroup sensors_init(void)
+{
+    SensorGroup sensor_group;
 
-  // Set up buffers
-  float in_data[INPUT_SIZE*MEM_SIZE];
-  int64_t in_dim[] = {1,MEM_SIZE,INPUT_SIZE};
-  float out_data[NUM_MOTORS];
-  int64_t out_dim[] = {1,NUM_MOTORS};
-  DLDataType f32_t = {kDLFloat, 32, 1};
-  DLDataType f16_t = {kDLFloat, 16, 1};
+    // Initialize the camera
+    Camera camera;
+    sensor_group.addSensor(camera);
 
-  // TVM buffers
-  DLTensor in = {in_data, device, 3, f32_t, in_dim, nullptr, 0};
-  DLTensor out = {out_data, device, 2, f32_t, out_dim, nullptr, 0};
+    return sensor_group;
+}
 
-  // Set up i2c
-  // TODO do fd inside class
-  printf("Init I2c\n");
-  std::string i2c_deviceName = "/dev/i2c-0";
-  I2c i2c = I2c(i2c_deviceName.c_str());
+// Main function
+int main(void)
+{
+    system_init();
+    flight_controller_init();
+    motor_controller_init();
+    communication_init();
+    auto sensors = sensors_init();
 
-  // Set up GPS
-  printf("Init GPS\n");
-  GPS gps = GPS();
-  std::thread gps_thread(&GPS::run, &gps);
-  printf("Home: %.3f %.3f\n", gps.home.latitude, gps.home.longitude);
+    // Main loop
+    while (1) {
+      // Read the sensor data
+      // ...
 
-  // Set up acceleromter
-  printf("Init acceleromter\n");
-  MPU mpu = MPU(&i2c);
-  mpu.calibrate();
-  std::thread mpu_thread(&MPU::run, &mpu);
+      // Communicate with base station
+      // ...
 
-  // Set up ultrasonic
-  printf("Init ultrasonic\n");
-  ULTRA ultra = ULTRA(&i2c);
-  std::thread ultra_thread(&ULTRA::run, &ultra);
+      // Calculate flight path
+      // ...
 
-  // Set up compass
-  printf("Init compass\n");
-  COMPASS compass = COMPASS(&i2c);
-  compass.calibrate();
-  std::thread compass_thread(&COMPASS::run, &compass);
+      // Update motors with flight path
+      // ...
 
-  // Set up people detection
-  printf("Init find-a-person\n");
-  FINDP findp = FINDP();
-  std::thread findp_thread(&FINDP::run, &findp);
+      break;
+    }
 
-  // Set up sensor fusion
-  printf("Init sensor fusion\n");
-  FUSE fuse = FUSE(&mpu, &compass, &gps, &ultra, in_data);
-  std::thread fuse_thread(&FUSE::run, &fuse);
+    // Debug
+    sensors.sensors[0].write();
 
-  // Runtime loop
-  printf("Running...\n");
-#if DEBUG
-  sleep(2); // To read init messages
-#endif
-  while (!interrupt) {
-
-    // Run model
-    exec.SetInput(0, &in);
-    exec.Run();
-    exec.CopyOutputTo(0, &out);
-
-    // Set motor throttles
-    // TODO scale to sim
-    // throttles[0] = out_data[0] * 2048;
-    // throttles[1] = out_data[1] * 2048;
-    // throttles[2] = out_data[2] * 2048;
-    // throttles[3] = out_data[3] * 2048;
-
-#if DEBUG
-    // std::cout << mpu.duration.count() << "us mpu\n";
-    // std::cout << compass.duration.count() << "us compass\n";
-    // printf("%.3f %.3f %.3f %.3f\n", out_data[0], out_data[1], out_data[2],
-           // out_data[3]);
-    // printf("x %.3f  y %.3f  z %.3f\n", in_data[0], in_data[1], in_data[2]);
-    printf("R %.3f P %.3f  Y %.3f\n", fuse.getRoll(), fuse.getPitch(), fuse.getYaw());
-    printf("Wx %.3f Wy %.3f  Wz %.3f\n", fuse.getWx(), fuse.getWy(), fuse.getWz());
-    printf("Ax %.3f Ay %.3f  Az %.3f\n", fuse.getAx(), fuse.getAy(), fuse.getAz());
-    printf("Cx %.3f Cy %.3f  Cz %.3f\n", fuse.getGx(), fuse.getGy(), fuse.getGz());
-    // printf("Altitude raw %d\n", ultra.getAltitude());
-    // printf("===========================\n");
-#endif
-  }
 }
