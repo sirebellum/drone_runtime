@@ -1,5 +1,5 @@
 // Description: Utilities to handle various sensor data
-#include "sensor.h"
+#include "sensors.h"
 
 // Sensor constructor
 Sensor::Sensor() {
@@ -14,11 +14,12 @@ void Sensor::init() {
 }
 
 // Read the sensor data
-void Sensor::read() {
+cv::Mat Sensor::read() {
+    return cv::Mat();
 }
 
 // Write the sensor data
-void Sensor::write() {
+void Sensor::write(cv::Mat data) {
 }
 
 // Read the sensor data at index
@@ -38,12 +39,17 @@ SensorGroup::~SensorGroup() {
 void SensorGroup::init() {
 }
 
-// Initialize the sensor group with list of sensors
-void SensorGroup::init(std::vector<Sensor>& sensors) {
-    this->sensors = sensors;
+// Add sensor
+void SensorGroup::addSensor(Sensor *sensor) {
+    sensors.push_back(sensor);
 }
 
-// Add sensor
-void SensorGroup::addSensor(Sensor sensor) {
-    sensors.push_back(sensor);
+// Get sensor by name
+Sensor* SensorGroup::getSensor(std::string name) {
+    for (size_t i = 0; i < sensors.size(); i++) {
+        if (sensors[i]->name.compare(name)) {
+            return sensors[i];
+        }
+    }
+    return NULL;
 }

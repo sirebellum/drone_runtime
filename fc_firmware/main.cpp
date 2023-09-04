@@ -1,5 +1,5 @@
-#include "sensor.h"
 #include "comms.h"
+#include "fc.h"
 #include <string>
 
 // System init
@@ -10,10 +10,12 @@ void system_init(void)
 }
 
 // Flight controller init
-void flight_controller_init(void)
+FC flight_controller_init(SensorGroup *sensors)
 {
-    // Initialize the flight controller
-    // ...
+    // Initialize flight controller
+    FC fc(sensors);
+
+    return fc;
 }
 
 // Communication init
@@ -29,13 +31,13 @@ WIFI communication_init(void)
 }
 
 // Sensors init
-SensorGroup sensors_init(void)
+SensorGroup* sensors_init(void)
 {
-    SensorGroup sensor_group;
+    SensorGroup* sensor_group = new SensorGroup();
 
     // Initialize the camera
-    Camera camera;
-    sensor_group.addSensor(camera);
+    Camera *camera = new Camera();
+    sensor_group->addSensor(camera);
 
     return sensor_group;
 }
@@ -44,14 +46,15 @@ SensorGroup sensors_init(void)
 int main(void)
 {
     system_init();
-    flight_controller_init();
     auto wifi = communication_init();
     auto sensors = sensors_init();
+    auto fc = flight_controller_init(sensors);
 
-    Sensor camera = sensors.sensors[0];
+    // Debug
+    Sensor* camera = sensors->getSensor("camera");
 
     // Main loop
-    while (1) {
+    for (size_t i = 0; i < 24; i++) {
       // Read the sensor data
       // ...
 
@@ -62,8 +65,10 @@ int main(void)
       // ...
 
       // Debug
-      camera.read();
-      camera.write();
-      break;
+      cv::waitKey(100);
+      cv::Mat buf = camera->read();
+      camera->write(buf);
+      // Print cap status
+      std::cout << "cap status: " << camera->status << std::endl;
     }
 }

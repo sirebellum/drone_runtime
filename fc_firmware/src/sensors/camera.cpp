@@ -1,5 +1,5 @@
 // Description: Camera stuff
-#include "sensor.h"
+#include "sensors.h"
 
 
 // Camera constructor
@@ -15,6 +15,8 @@ Camera::~Camera() {
 
     // Release the writer
     writer.release();
+
+    status = "disconnected";
 }
 
 // Initialize the camera
@@ -27,28 +29,36 @@ void Camera::init() {
         std::cout << "Error opening camera" << std::endl;
     }
 
-    // Set the shape of the camera
-    shape = {480, 640, 3};
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, shape[1]);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, shape[0]);
+    // Set the camera resolution
+    int width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    int height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    cv::Size shape(width, height);
 
     // Initialize the writer
     writer = cv::VideoWriter(
         "output.avi",
-        cv::VideoWriter::fourcc('M','J','P','G'),
+        cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
         10,
-        cv::Size(shape[1], shape[0])
+        shape
     );
+
+    status = "ready";
 }
 
 // Read the camera data
 void Camera::read() {
     // Read the camera data
-    cap.read(data);
+    cv::Mat* data = new cv::Mat();
+    cap.read(*data);
+
+    // Check if data is empty
+    if (data->empty()) {
+        std::cout << "Error reading camera data" << std::endl;
+    }
 }
 
 // Write the camera data
-void Camera::write() {
+void Camera::write(cv::Mat data) {
     // Write the camera data
     writer.write(data);
 }

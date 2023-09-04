@@ -12,23 +12,19 @@ public:
     void init();
 
     // Read the sensor data
-    void read();
+    cv::Mat read();
     float readIndex(size_t index);
 
     // Write the sensor data
-    void write();
+    void write(cv::Mat data);
 
     // Shape of the sensor data
     std::vector<size_t> shape;
 
-    // Return sensor data
-    cv::Mat getData() {
-        return data;
-    }
+    // Sensor name
+    std::string name = "null";
 
-protected:
-    // Sensor data
-    cv::Mat data;
+    std::string status = "null";
 };
 
 // Class to group all sensors
@@ -40,14 +36,18 @@ public:
     // Initialize the sensor group
     void init();
 
-    // Initialize the sensor group with list of sensors
-    void init(std::vector<Sensor>& sensors);
-
     // Add sensor
-    void addSensor(Sensor sensor);
+    void addSensor(Sensor *sensor);
 
+    // Get sensor
+    Sensor* getSensor(std::string name);
+    Sensor* getSensor(size_t index) {
+        return sensors[index];
+    }
+
+private:
     // Sensor group data
-    std::vector<Sensor> sensors;
+    std::vector<Sensor*> sensors;
 };
 
 // Class to handle camera
@@ -63,11 +63,14 @@ public:
     void read();
 
     // Write the camera data
-    void write();
+    void write(cv::Mat frame);
 
+    std::string name = "camera";
+
+private:
     // CV camera object
     cv::VideoCapture cap;
 
-    // Write frame
+    // CV writer object
     cv::VideoWriter writer;
 };

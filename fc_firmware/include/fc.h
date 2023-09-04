@@ -1,42 +1,23 @@
 // Description: Handle flight control
-#include <vector>
-#include "comm.h"
-#include "sensor.h"
-#include "motor.h"
+#include "sensors.h"
 
 // Class to handle flight control
-class FlightController {
+class FC {
 public:
-    FlightController();
-    ~FlightController();
+    FC(SensorGroup *sensors);
+    ~FC();
 
     // Initialize the flight controller
-    void init();
+    void init(SensorGroup *sensors);
 
     // Calculate the flight path
     void calculateFlightPath();
 
-    // Set the motor speed
-    void setMotorSpeed(float speed);
+private:
+    // GPS history
+    size_t gps_history_size = 256;
+    float gps_history[2][256];
 
-    // Read the sensor data
-    void readSensorData();
-
-    // Send the sensor data
-    void sendSensorData();
-
-    // Receive the motor speed
-    void receiveMotorSpeed();
-
-    // Shape of the sensor data
-    std::vector<size_t> sensorShape;
-
-    // Number of motors
-    size_t numMotors;
-
-    // Motor group
-    MotorGroup motorGroup;
-
-    // Communication
-    Comm comm;
+    // Sensor group
+    SensorGroup *sensors;
 };
