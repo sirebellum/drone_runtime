@@ -37,7 +37,8 @@ void Camera::init() {
         "output.avi",
         cv::VideoWriter::fourcc('M','J','P','G'),
         10,
-        cv::Size(shape[1], shape[0]));
+        cv::Size(shape[1], shape[0])
+    );
 }
 
 // Read the camera data

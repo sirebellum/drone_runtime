@@ -1,4 +1,6 @@
 #include "sensor.h"
+#include "comms.h"
+#include <string>
 
 // System init
 void system_init(void)
@@ -15,10 +17,15 @@ void flight_controller_init(void)
 }
 
 // Communication init
-void communication_init(void)
+WIFI communication_init(void)
 {
-    // Initialize the communication
-    // ...
+    // Initialize wifi
+    // TODO: Make address and port configurable
+    std::string address = "http://192.168.69.162";
+    int port = 5000;
+    WIFI wifi(address, port);
+
+    return wifi;
 }
 
 // Sensors init
@@ -38,7 +45,7 @@ int main(void)
 {
     system_init();
     flight_controller_init();
-    communication_init();
+    auto wifi = communication_init();
     auto sensors = sensors_init();
 
     Sensor camera = sensors.sensors[0];

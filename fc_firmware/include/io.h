@@ -16,7 +16,7 @@ public:
     void read(size_t size);
 
     // Write to the IO
-    void write(size_t size);
+    void write(char* data, size_t size);
 
     // Path to the IO device
     std::string dev;

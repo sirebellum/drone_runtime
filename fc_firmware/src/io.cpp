@@ -25,7 +25,7 @@ void IO::read(size_t size) {
 }
 
 // Write to the IO
-void IO::write(size_t size) {
+void IO::write(char* data, size_t size) {
     // Write to the stream
     fd.write(data, size);
 }
