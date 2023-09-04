@@ -39,6 +39,9 @@ SensorGroup* sensors_init(void)
     Camera *camera = new Camera();
     sensor_group->addSensor(camera);
 
+    // Start sensor threads
+    sensor_group->init();
+
     return sensor_group;
 }
 
@@ -66,7 +69,6 @@ int main(void)
 
       // Debug
       cv::waitKey(100);
-      camera->read();
     }
     camera->write_file();
 

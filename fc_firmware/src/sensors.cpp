@@ -1,25 +1,22 @@
 // Description: Utilities to handle various sensor data
 #include "sensors.h"
 
+
 // Sensor constructor
 Sensor::Sensor() {
 }
 
 // Sensor destructor
 Sensor::~Sensor() {
+    // Stop the sensor thread
+    stop();
+    delete thread;
 }
 
-// Initialize the sensor
+// Virtual functions
 void Sensor::init() {
 }
-
-// Read the sensor data
 void Sensor::read() {
-}
-
-// Read the sensor data at index
-float Sensor::readIndex(size_t index) {
-    return 0.0;
 }
 
 // Sensor group constructor
@@ -28,7 +25,6 @@ SensorGroup::SensorGroup() {
 
 // Sensor group destructor
 SensorGroup::~SensorGroup() {
-    // Go through and delete all sensors
     for (size_t i = 0; i < sensors.size(); i++) {
         delete sensors[i];
     }
@@ -36,6 +32,10 @@ SensorGroup::~SensorGroup() {
 
 // Initialize the sensor group
 void SensorGroup::init() {
+    // Go through and start all the sensors
+    for (size_t i = 0; i < sensors.size(); i++) {
+        sensors[i]->start();
+    }
 }
 
 // Add sensor
@@ -51,4 +51,26 @@ Sensor* SensorGroup::getSensor(std::string name) {
         }
     }
     return NULL;
+}
+
+// Start the sensor thread
+void Sensor::start() {
+    // Start the sensor thread
+    running = true;
+    thread = new std::thread(&Sensor::run, this);
+}
+
+// Stop the sensor thread
+void Sensor::stop() {
+    // Stop the sensor thread
+    running = false;
+    thread->join();
+}
+
+// Sensor thread
+void Sensor::run() {
+    // Run the sensor thread
+    while (running) {
+        read();
+    }
 }

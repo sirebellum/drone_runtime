@@ -1,5 +1,6 @@
 // Description: Utilities to handle various sensor data
 #include <vector>
+#include <thread>
 #include "opencv2/opencv.hpp"
 
 // Class to handle various sensor data
@@ -9,23 +10,31 @@ public:
     ~Sensor();
 
     // Initialize the sensor
-    void init();
+    virtual void init();
 
     // Read the sensor data
-    void read();
-    float readIndex(size_t index);
+    virtual void read();
 
     // Shape of the sensor data
-    std::vector<size_t> shape;
+    cv::Size shape;
 
-    // Sensor name
+    // Sensor metadata
     std::string name = "null";
-
     std::string status = "null";
+    int fps = 30;
+
+    // Public thread
+    void start();
+    void stop();
 
 protected:
     // Sensor data
     cv::Mat* data;
+
+    // Sensor thread
+    bool running = false;
+    std::thread* thread;
+    virtual void run();
 };
 
 // Class to group all sensors
@@ -74,7 +83,7 @@ public:
         return &frame_buffer[index];
     }
 
-    // Sensor name
+    // Metadata
     std::string name = "camera";
 
 private:
@@ -85,4 +94,7 @@ private:
     cv::Mat* frame_buffer;
     size_t buffer_size = 32;
     size_t buffer_index = 0;
+
+    // Thread
+    void run();
 };

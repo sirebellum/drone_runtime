@@ -1,5 +1,6 @@
 // Description: Camera stuff
 #include "sensors.h"
+#include <unistd.h>
 
 
 // Camera constructor
@@ -35,7 +36,7 @@ void Camera::init() {
     int width = cap->get(cv::CAP_PROP_FRAME_WIDTH);
     int height = cap->get(cv::CAP_PROP_FRAME_HEIGHT);
     int num_channels = cap->get(cv::CAP_PROP_CHANNEL);
-    cv::Size shape(width, height);
+    shape = cv::Size(width, height);
 
     status = "ready";
 
@@ -68,5 +69,17 @@ void Camera::write_file() {
     for (size_t i = 0; i < buffer_size; i++) {
         std::string filename = "data/frame_" + std::to_string(i) + ".jpg";
         cv::imwrite(filename, frame_buffer[i]);
+    }
+}
+
+// Run the sensor loop
+void Camera::run() {
+    // Run the sensor loop
+    while (running) {
+        // Read the sensor data
+        read();
+
+        // Sleep for 1 / fps
+        usleep(1000000 / this->fps);
     }
 }
