@@ -15,9 +15,6 @@ public:
     void read();
     float readIndex(size_t index);
 
-    // Write the sensor data
-    void write();
-
     // Shape of the sensor data
     std::vector<size_t> shape;
 
@@ -69,12 +66,23 @@ public:
     // Write the camera data
     void write_file();
 
+    // Index into frame buffer
+    cv::Mat* getFrame() {
+        return &frame_buffer[buffer_index];
+    }
+    cv::Mat* getFrame(size_t index) {
+        return &frame_buffer[index];
+    }
+
+    // Sensor name
     std::string name = "camera";
 
 private:
     // CV camera object
     cv::VideoCapture* cap;
 
-    // CV writer object
-    cv::VideoWriter* writer;
+    // Circular frame buffer
+    cv::Mat* frame_buffer;
+    size_t buffer_size = 32;
+    size_t buffer_index = 0;
 };

@@ -13,13 +13,9 @@ Camera::~Camera() {
     // Release the camera
     cap->release();
 
-    // Release the writer
-    writer->release();
-
     // Delete the stuff
     delete data;
     delete cap;
-    delete writer;
 
     status = "disconnected";
 }
@@ -41,39 +37,36 @@ void Camera::init() {
     int num_channels = cap->get(cv::CAP_PROP_CHANNEL);
     cv::Size shape(width, height);
 
-    // Initialize the writer
-    writer = new cv::VideoWriter(
-        "output.avi",
-        cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-        10,
-        shape,
-        num_channels == 3? true: false
-    );
-
-    // Check if writer is opened
-    if (!writer->isOpened()) {
-        std::cout << "Error opening writer" << std::endl;
-    }
-
     status = "ready";
 
-    // Crate a mat that is the frame size and number of channels
-    data = new cv::Mat(shape, CV_8UC(num_channels));
+    // Create circular frame buffer for camera
+    frame_buffer = new cv::Mat[buffer_size];
+    for (size_t i = 0; i < buffer_size; i++) {
+        cap->read(frame_buffer[i]);
+    }
 }
 
 // Read the camera data
 void Camera::read() {
     // Read the camera data
-    cap->read(*data);
+    cv::Mat frame;
+    cap->read(frame);
 
     // Check if data is empty
-    if (data->empty()) {
+    if (frame.empty()) {
         std::cout << "Error reading camera data" << std::endl;
     }
+
+    // Update frame buffer
+    frame_buffer[buffer_index] = frame;
+    buffer_index = (buffer_index + 1) % 32;
 }
 
 // Write the camera data
 void Camera::write_file() {
-    // Write the camera data
-    writer->write(*data);
+    // Write out frame buffer
+    for (size_t i = 0; i < buffer_size; i++) {
+        std::string filename = "data/frame_" + std::to_string(i) + ".jpg";
+        cv::imwrite(filename, frame_buffer[i]);
+    }
 }

@@ -51,7 +51,7 @@ int main(void)
     auto fc = flight_controller_init(sensors);
 
     // Debug
-    Sensor* camera = sensors->getSensor("camera");
+    Camera* camera = (Camera*)sensors->getSensor("camera");
 
     // Main loop
     for (size_t i = 0; i < 24; i++) {
@@ -67,10 +67,8 @@ int main(void)
       // Debug
       cv::waitKey(100);
       camera->read();
-      camera->write();
-      // Print cap status
-      std::cout << "cap status: " << camera->status << std::endl;
     }
+    camera->write_file();
 
     // Cleanup
     delete wifi;

@@ -17,10 +17,6 @@ void Sensor::init() {
 void Sensor::read() {
 }
 
-// Write the sensor data
-void Sensor::write() {
-}
-
 // Read the sensor data at index
 float Sensor::readIndex(size_t index) {
     return 0.0;
