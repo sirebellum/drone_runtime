@@ -33,6 +33,10 @@ SensorGroup::SensorGroup() {
 
 // Sensor group destructor
 SensorGroup::~SensorGroup() {
+    // Go through and delete all sensors
+    for (size_t i = 0; i < sensors.size(); i++) {
+        delete sensors[i];
+    }
 }
 
 // Initialize the sensor group

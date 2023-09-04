@@ -19,7 +19,6 @@ void WIFI::init(std::string addr, int port) {
     this->addr = addr;
 
     // Get heartbeat status on port 5000
-    curlpp::Cleanup cleanup;
     curlpp::Easy request;
     request.setOpt(
         new curlpp::options::Url(

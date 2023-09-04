@@ -22,6 +22,7 @@ Camera::~Camera() {
 // Initialize the camera
 void Camera::init() {
     // Initialize capture object
+    // #TODO: Make the index configurable
     cap = cv::VideoCapture(0);
 
     // Check if camera is opened
