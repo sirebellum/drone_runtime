@@ -14,8 +14,7 @@ void Sensor::init() {
 }
 
 // Read the sensor data
-cv::Mat Sensor::read() {
-    return cv::Mat();
+void Sensor::read() {
 }
 
 // Write the sensor data

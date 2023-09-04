@@ -12,7 +12,7 @@ public:
     void init();
 
     // Read the sensor data
-    cv::Mat read();
+    void read();
     float readIndex(size_t index);
 
     // Write the sensor data
@@ -64,7 +64,7 @@ public:
     void init();
 
     // Read the camera data
-    cv::Mat* read();
+    void read();
 
     // Write the camera data
     void write_file();
@@ -73,8 +73,8 @@ public:
 
 private:
     // CV camera object
-    cv::VideoCapture cap;
+    cv::VideoCapture* cap;
 
     // CV writer object
-    cv::VideoWriter writer;
+    cv::VideoWriter* writer;
 };

@@ -11,13 +11,15 @@ Camera::Camera() {
 // Camera destructor
 Camera::~Camera() {
     // Release the camera
-    cap.release();
+    cap->release();
 
     // Release the writer
-    writer.release();
+    writer->release();
 
-    // Delete the buffer
+    // Delete the stuff
     delete data;
+    delete cap;
+    delete writer;
 
     status = "disconnected";
 }
@@ -26,28 +28,29 @@ Camera::~Camera() {
 void Camera::init() {
     // Initialize capture object
     // #TODO: Make the index configurable
-    cap = cv::VideoCapture(0);
+    cap = new cv::VideoCapture(0);
 
     // Check if camera is opened
-    if (!cap.isOpened()) {
+    if (!cap->isOpened()) {
         std::cout << "Error opening camera" << std::endl;
     }
 
     // Set the camera resolution
-    int width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
-    int height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    int width = cap->get(cv::CAP_PROP_FRAME_WIDTH);
+    int height = cap->get(cv::CAP_PROP_FRAME_HEIGHT);
     cv::Size shape(width, height);
 
     // Initialize the writer
-    writer = cv::VideoWriter(
-        "output.avi",
+    writer = new cv::VideoWriter(
+        "output.mp4",
         cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
         10,
-        shape
+        shape,
+        true
     );
 
     // Check if writer is opened
-    if (!writer.isOpened()) {
+    if (!writer->isOpened()) {
         std::cout << "Error opening writer" << std::endl;
     }
 
@@ -58,9 +61,9 @@ void Camera::init() {
 }
 
 // Read the camera data
-cv::Mat* Camera::read() {
+void Camera::read() {
     // Read the camera data
-    cap.read(*data);
+    cap->read(*data);
 
     // Check if data is empty
     if (data->empty()) {
@@ -71,5 +74,5 @@ cv::Mat* Camera::read() {
 // Write the camera data
 void Camera::write_file() {
     // Write the camera data
-    writer.write(*data);
+    writer->write(*data);
 }
