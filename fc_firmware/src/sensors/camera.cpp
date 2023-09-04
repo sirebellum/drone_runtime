@@ -38,15 +38,16 @@ void Camera::init() {
     // Set the camera resolution
     int width = cap->get(cv::CAP_PROP_FRAME_WIDTH);
     int height = cap->get(cv::CAP_PROP_FRAME_HEIGHT);
+    int num_channels = cap->get(cv::CAP_PROP_CHANNEL);
     cv::Size shape(width, height);
 
     // Initialize the writer
     writer = new cv::VideoWriter(
-        "output.mp4",
+        "output.avi",
         cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
         10,
         shape,
-        true
+        num_channels == 3? true: false
     );
 
     // Check if writer is opened
@@ -56,8 +57,8 @@ void Camera::init() {
 
     status = "ready";
 
-    // Crate a mat that is the frame size
-    data = new cv::Mat(shape, CV_8UC3);
+    // Crate a mat that is the frame size and number of channels
+    data = new cv::Mat(shape, CV_8UC(num_channels));
 }
 
 // Read the camera data
