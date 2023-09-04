@@ -16,7 +16,7 @@ public:
     float readIndex(size_t index);
 
     // Write the sensor data
-    void write(cv::Mat data);
+    void write();
 
     // Shape of the sensor data
     std::vector<size_t> shape;
@@ -25,6 +25,10 @@ public:
     std::string name = "null";
 
     std::string status = "null";
+
+protected:
+    // Sensor data
+    cv::Mat* data;
 };
 
 // Class to group all sensors
@@ -60,10 +64,10 @@ public:
     void init();
 
     // Read the camera data
-    void read();
+    cv::Mat* read();
 
     // Write the camera data
-    void write(cv::Mat frame);
+    void write_file();
 
     std::string name = "camera";
 

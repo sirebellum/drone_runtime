@@ -16,6 +16,9 @@ Camera::~Camera() {
     // Release the writer
     writer.release();
 
+    // Delete the buffer
+    delete data;
+
     status = "disconnected";
 }
 
@@ -43,13 +46,20 @@ void Camera::init() {
         shape
     );
 
+    // Check if writer is opened
+    if (!writer.isOpened()) {
+        std::cout << "Error opening writer" << std::endl;
+    }
+
     status = "ready";
+
+    // Crate a mat that is the frame size
+    data = new cv::Mat(shape, CV_8UC3);
 }
 
 // Read the camera data
-void Camera::read() {
+cv::Mat* Camera::read() {
     // Read the camera data
-    cv::Mat* data = new cv::Mat();
     cap.read(*data);
 
     // Check if data is empty
@@ -59,7 +69,7 @@ void Camera::read() {
 }
 
 // Write the camera data
-void Camera::write(cv::Mat data) {
+void Camera::write_file() {
     // Write the camera data
-    writer.write(data);
+    writer.write(*data);
 }

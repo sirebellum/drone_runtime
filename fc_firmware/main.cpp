@@ -10,22 +10,22 @@ void system_init(void)
 }
 
 // Flight controller init
-FC flight_controller_init(SensorGroup *sensors)
+FC* flight_controller_init(SensorGroup *sensors)
 {
     // Initialize flight controller
-    FC fc(sensors);
+    FC* fc = new FC(sensors);
 
     return fc;
 }
 
 // Communication init
-WIFI communication_init(void)
+WIFI* communication_init(void)
 {
     // Initialize wifi
     // TODO: Make address and port configurable
     std::string address = "http://192.168.69.162";
     int port = 5000;
-    WIFI wifi(address, port);
+    WIFI* wifi = new WIFI(address, port);
 
     return wifi;
 }
@@ -66,9 +66,14 @@ int main(void)
 
       // Debug
       cv::waitKey(100);
-      cv::Mat buf = camera->read();
-      camera->write(buf);
+      camera->read();
+      camera->write();
       // Print cap status
       std::cout << "cap status: " << camera->status << std::endl;
     }
+
+    // Cleanup
+    delete wifi;
+    delete sensors;
+    delete fc;
 }

@@ -19,7 +19,7 @@ cv::Mat Sensor::read() {
 }
 
 // Write the sensor data
-void Sensor::write(cv::Mat data) {
+void Sensor::write() {
 }
 
 // Read the sensor data at index
