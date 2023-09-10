@@ -1,6 +1,7 @@
 #include "comms.h"
 #include "fc.h"
-#include <string>
+#include "infer.h"
+
 
 // System init
 void system_init(void)
@@ -12,8 +13,11 @@ void system_init(void)
 // Flight controller init
 FC* flight_controller_init(SensorGroup *sensors)
 {
+    // Initialize the landing inference engine
+    Infer* landing = new Infer();
+
     // Initialize flight controller
-    FC* fc = new FC(sensors);
+    FC* fc = new FC(sensors, landing);
 
     return fc;
 }
