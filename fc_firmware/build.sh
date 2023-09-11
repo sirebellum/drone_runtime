@@ -1,7 +1,8 @@
-LIBS="/Users/josh/gits/opencv/install/lib/*.dylib"
-LIBS+=" -lz -lcurl -lcurlpp"
+LIBS+="-lcurlpp -lcurl"
+LIBS+=" /usr/local/lib/libtvm_runtime.so"
+LIBS+=" /usr/lib/x86_64-linux-gnu/libopencv*.so"
+INCLUDES+=" -Iinclude/"
+INCLUDES+=" -I/home/compute/gits.local/tvm/3rdparty/dlpack/include"
+INCLUDES+=" -I/home/compute/gits.local/tvm/3rdparty/dmlc-core/include"
 
-INCLUDES="-I/Users/josh/gits/opencv/install/include/opencv4"
-INCLUDES+=" -I/Users/josh/gits/vcpkg/installed/arm64-osx/include"
-
-/usr/bin/clang++ main.cpp src/*.cpp src/*/*.cpp -Iinclude/ $INCLUDES $LIBS -std=c++14 -fuse-ld=lld -o firmware
+clang++ main.cpp src/*.cpp src/*/*.cpp $INCLUDES $LIBS -std=c++17 -fuse-ld=lld -o firmware

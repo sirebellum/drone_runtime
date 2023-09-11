@@ -38,6 +38,11 @@ void SensorGroup::init() {
     }
 }
 
+// Start is alias for init
+void SensorGroup::start() {
+    init();
+}
+
 // Add sensor
 void SensorGroup::addSensor(Sensor *sensor) {
     sensors.push_back(sensor);

@@ -11,6 +11,9 @@ Camera::Camera() {
 
 // Camera destructor
 Camera::~Camera() {
+    // Stop the camera
+    stop();
+
     // Release the camera
     cap->release();
 

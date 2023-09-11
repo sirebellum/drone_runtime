@@ -9,7 +9,8 @@ enum State {
     TAKEOFF,
     HOVER,
     LAND,
-    RETURN
+    RETURN,
+    DEBUG
 };
 
 // Class to handle flight control
@@ -31,6 +32,7 @@ public:
     // Thread control
     void start();
     void stop();
+    void run_debug();
 
 private:
     // GPS history

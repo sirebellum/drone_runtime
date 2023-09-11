@@ -1,6 +1,5 @@
 #include "comms.h"
 #include "fc.h"
-#include "infer.h"
 
 
 // System init
@@ -14,10 +13,18 @@ void system_init(void)
 FC* flight_controller_init(SensorGroup *sensors)
 {
     // Initialize the landing inference engine
-    Infer* landing = new Infer();
+    // TODO: Make configurable via file
+    std::string model_so = "lib/model_x86.so";
+    Infer* landing = new Infer(model_so);
 
     // Initialize flight controller
     FC* fc = new FC(sensors, landing);
+
+    // Set in debug mode
+    fc->setState(DEBUG);
+
+    // Start the flight controller
+    // fc->start();
 
     return fc;
 }
@@ -26,7 +33,7 @@ FC* flight_controller_init(SensorGroup *sensors)
 WIFI* communication_init(void)
 {
     // Initialize wifi
-    // TODO: Make address and port configurable
+    // TODO: Make configurable via file
     std::string address = "http://192.168.69.162";
     int port = 5000;
     WIFI* wifi = new WIFI(address, port);
@@ -44,7 +51,7 @@ SensorGroup* sensors_init(void)
     sensor_group->addSensor(camera);
 
     // Start sensor threads
-    sensor_group->init();
+    sensor_group->start();
 
     return sensor_group;
 }
@@ -72,7 +79,9 @@ int main(void)
       // ...
 
       // Debug
+    //   fc->run_debug();
       cv::waitKey(100);
+      std::cout << "Iteration " << i << std::endl;
     }
     camera->write_file();
 

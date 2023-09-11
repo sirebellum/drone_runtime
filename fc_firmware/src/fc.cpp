@@ -8,6 +8,7 @@ FC::FC(SensorGroup *sensors, Infer* infer) {
 
 // FC destructor
 FC::~FC() {
+    stop();
 }
 
 // Initialize the flight controller
@@ -58,6 +59,40 @@ void FC::run() {
             case RETURN:
                 return_state();
                 break;
+            case DEBUG:
+                run_debug();
+                break;
         }
     }
+}
+
+// State functions
+void FC::init_state() {
+    // Initialize the system
+}
+
+void FC::takeoff_state() {
+    // Takeoff
+}
+
+void FC::hover_state() {
+    // Hover
+}
+
+void FC::land_state() {
+    // Land
+}
+
+void FC::return_state() {
+    // Return
+}
+
+void FC::run_debug() {
+    // Run debug
+    Camera *camera = (Camera*)sensors->getSensor("camera");
+    cv::Mat *frame = camera->getFrame();
+
+    // Execute the landing model
+    float out_data[6];
+    infer->run(*frame, out_data);
 }

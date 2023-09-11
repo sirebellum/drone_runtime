@@ -45,6 +45,7 @@ public:
 
     // Initialize the sensor group
     void init();
+    void start();
 
     // Add sensor
     void addSensor(Sensor *sensor);
