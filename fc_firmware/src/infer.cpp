@@ -17,6 +17,7 @@ Infer::~Infer() {
 void Infer::init(const std::string& model_path,
                  const std::string& model_json,
                  const std::string& model_params) {
+    // Load files
     tvm::runtime::Module mod_syslib = tvm::runtime::Module::LoadFromFile(model_path);
 
     std::ifstream json_in(model_json, std::ios::in);
@@ -27,11 +28,12 @@ void Infer::init(const std::string& model_path,
     std::string params_data((std::istreambuf_iterator<char>(params_in)), std::istreambuf_iterator<char>());
     params_in.close();
 
+    // Convert params to TVMByteArray
     TVMByteArray params_arr;
     params_arr.data = params_data.c_str();
     params_arr.size = params_data.length();
 
-    mod_ = (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data, mod_syslib, dev_);
+    mod_ = (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data, mod_syslib, dev_, dev_id_);
 
     set_input_ = mod_.GetFunction("set_input");
     get_output_ = mod_.GetFunction("get_output");
@@ -44,15 +46,22 @@ void Infer::init(const std::string& model_path,
 // Run the inference
 void Infer::run(const cv::Mat& img, float* out_data) {
 
+    // Resize input image
+    cv::Mat img_resized;
+    cv::resize(img, img_resized, cv::Size(input_height, input_width));
+
+    // Convert input to single channel
+    cv::Mat img_gray;
+    cv::cvtColor(img_resized, img_gray, cv::COLOR_BGR2GRAY);
+
     // Convert input from cv::Mat to tvm::runtime::NDArray
     cv::Mat img_float;
-    img.convertTo(img_float, CV_32F);
+    img_gray.convertTo(img_float, CV_32FC1);
     cv::Mat img_norm = img_float / 255.0;
-    cv::Mat img_norm_t = img_norm.t();
-    cv::Mat img_norm_t_flat = img_norm_t.reshape(1, img_norm_t.total());
+    cv::Mat img_flat = img_norm.reshape(1, img_norm.total());
     tvm::runtime::NDArray img_tvm = tvm::runtime::NDArray::Empty(
-        {1, 3, 256, 256}, {kDLFloat, 32, 1}, {kDLCPU, 0});
-    memcpy(img_tvm.ToDLPack()->dl_tensor.data, img_norm_t_flat.data, get_array_size(img_tvm));
+        {1, 1, input_height, input_width}, {kDLFloat, 32, 1}, {kDLCPU, 0});
+    memcpy(img_tvm.ToDLPack()->dl_tensor.data, img_flat.data, get_array_size(img_tvm));
 
     set_input_("input", img_tvm);
     run_();

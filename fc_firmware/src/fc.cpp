@@ -96,15 +96,24 @@ void FC::run_debug() {
     float out_data[6];
     infer->run(*frame, out_data);
 
-    // Get bbox and rot
+    // Get outputs
     float bbox[4] = {out_data[0], out_data[1], out_data[2], out_data[3]};
     float rot[2] = {out_data[4], out_data[5]};
 
     // Calculate arctan of cos and sin rots
-    float rot_angle = atan2(rot[1], rot[0]);
+    float rot_angle = atan2(rot[1], rot[0]) * 180 / M_PI;
+
+    // Calculate the pixel values of the bounding box
+    int bbox_x1 = bbox[0] * infer->input_width;
+    int bbox_y1 = bbox[1] * infer->input_height;
+    int bbox_x2 = bbox[2] * infer->input_width;
+    int bbox_y2 = bbox[3] * infer->input_height;
+
+    // Resize the image
+    cv::resize(*frame, *frame, cv::Size(infer->input_height, infer->input_width));
 
     // Draw the bounding box
-    cv::rectangle(*frame, cv::Point(bbox[0], bbox[1]), cv::Point(bbox[2], bbox[3]), cv::Scalar(0, 255, 0), 2);
+    cv::rectangle(*frame, cv::Point(bbox_x1, bbox_y1), cv::Point(bbox_x2, bbox_y2), cv::Scalar(0, 255, 0), 2);
 
     // Rotate the image
     cv::Point2f center(frame->cols/2.0, frame->rows/2.0);

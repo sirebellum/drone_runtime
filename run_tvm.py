@@ -2,7 +2,8 @@
 import tvm
 import torch
 from tvm import relay
-from models import IMAGE_SIZE
+# from models import IMAGE_SIZE
+IMAGE_SIZE = 256
 import argparse
 
 # Parse arguments
@@ -30,7 +31,7 @@ model = torch.load(args.model)
 model.eval()
 
 # Create a dummy input
-input_shape = (1, 3, IMAGE_SIZE, IMAGE_SIZE)
+input_shape = (1, 1, IMAGE_SIZE, IMAGE_SIZE)
 
 # Create a Relay model
 input_name = 'input'

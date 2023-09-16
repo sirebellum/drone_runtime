@@ -69,23 +69,25 @@ int main(void)
     // Debug
     Camera* camera = (Camera*)sensors->getSensor("camera");
 
-    // Main loop
-    for (size_t i = 0; i < 24; i++) {
-      // Read the sensor data
-      // ...
-
-      // Communicate with base station
-      // ...
-
-      // Update flight controller
-      // ...
-
-      // Debug
-    //   fc->run_debug();
-      cv::waitKey(100);
-      std::cout << "Iteration " << i << std::endl;
+    // Loop to run until keyboard exception
+    try {
+        while (true) {
+            // Read the sensor data
+            // ...
+    
+            // Communicate with base station
+            // ...
+    
+            // Update flight controller
+            // ...
+    
+            // Debug
+            fc->run_debug();
+            cv::waitKey(1000);
+        }
+        } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
     }
-    camera->write_file();
 
     // Cleanup
     delete wifi;
