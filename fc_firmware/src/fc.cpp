@@ -90,11 +90,11 @@ void FC::return_state() {
 void FC::run_debug() {
     // Run debug
     Camera *camera = (Camera*)sensors->getSensor("camera");
-    cv::Mat *frame = camera->getFrame();
+    cv::Mat frame = camera->getFrame();
 
     // Execute the landing model
     float out_data[6];
-    infer->run(*frame, out_data);
+    infer->run(frame, out_data);
 
     // Get outputs
     float bbox[4] = {out_data[0], out_data[1], out_data[2], out_data[3]};
@@ -110,16 +110,16 @@ void FC::run_debug() {
     int bbox_y2 = bbox[3] * infer->input_height;
 
     // Resize the image
-    cv::resize(*frame, *frame, cv::Size(infer->input_height, infer->input_width));
+    cv::resize(frame, frame, cv::Size(infer->input_height, infer->input_width));
 
     // Draw the bounding box
-    cv::rectangle(*frame, cv::Point(bbox_x1, bbox_y1), cv::Point(bbox_x2, bbox_y2), cv::Scalar(0, 255, 0), 2);
+    cv::rectangle(frame, cv::Point(bbox_x1, bbox_y1), cv::Point(bbox_x2, bbox_y2), cv::Scalar(0, 255, 0), 2);
 
     // Rotate the image
-    cv::Point2f center(frame->cols/2.0, frame->rows/2.0);
+    cv::Point2f center(frame.cols/2.0, frame.rows/2.0);
     cv::Mat rot_mat = cv::getRotationMatrix2D(center, rot_angle, 1.0);
-    cv::warpAffine(*frame, *frame, rot_mat, frame->size());
+    cv::warpAffine(frame, frame, rot_mat, frame.size());
 
     // Display the image
-    cv::imshow("frame", *frame);
+    cv::imshow("frame", frame);
 }

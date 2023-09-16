@@ -77,11 +77,11 @@ public:
     void write_file();
 
     // Index into frame buffer
-    cv::Mat* getFrame() {
-        return &frame_buffer[buffer_index];
+    cv::Mat getFrame() {
+        return frame_buffer[buffer_index];
     }
-    cv::Mat* getFrame(size_t index) {
-        return &frame_buffer[index];
+    cv::Mat getFrame(size_t index) {
+        return frame_buffer[index];
     }
 
     // Metadata
