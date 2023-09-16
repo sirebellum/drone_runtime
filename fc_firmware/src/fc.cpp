@@ -8,7 +8,7 @@ FC::FC(SensorGroup *sensors, Infer* infer) {
 
 // FC destructor
 FC::~FC() {
-    stop();
+    // stop();
 }
 
 // Initialize the flight controller
@@ -95,4 +95,22 @@ void FC::run_debug() {
     // Execute the landing model
     float out_data[6];
     infer->run(*frame, out_data);
+
+    // Get bbox and rot
+    float bbox[4] = {out_data[0], out_data[1], out_data[2], out_data[3]};
+    float rot[2] = {out_data[4], out_data[5]};
+
+    // Calculate arctan of cos and sin rots
+    float rot_angle = atan2(rot[1], rot[0]);
+
+    // Draw the bounding box
+    cv::rectangle(*frame, cv::Point(bbox[0], bbox[1]), cv::Point(bbox[2], bbox[3]), cv::Scalar(0, 255, 0), 2);
+
+    // Rotate the image
+    cv::Point2f center(frame->cols/2.0, frame->rows/2.0);
+    cv::Mat rot_mat = cv::getRotationMatrix2D(center, rot_angle, 1.0);
+    cv::warpAffine(*frame, *frame, rot_mat, frame->size());
+
+    // Display the image
+    cv::imshow("frame", *frame);
 }

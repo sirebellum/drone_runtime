@@ -36,10 +36,12 @@ void Camera::init() {
     }
 
     // Set the camera resolution
-    int width = cap->get(cv::CAP_PROP_FRAME_WIDTH);
-    int height = cap->get(cv::CAP_PROP_FRAME_HEIGHT);
-    int num_channels = cap->get(cv::CAP_PROP_CHANNEL);
+    int width = 256;
+    int height = 256;
+    int num_channels = 3;
     shape = cv::Size(width, height);
+    cap->set(cv::CAP_PROP_FRAME_WIDTH, width);
+    cap->set(cv::CAP_PROP_FRAME_HEIGHT, height);
 
     status = "ready";
 

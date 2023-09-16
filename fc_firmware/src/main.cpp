@@ -14,8 +14,10 @@ FC* flight_controller_init(SensorGroup *sensors)
 {
     // Initialize the landing inference engine
     // TODO: Make configurable via file
-    std::string model_so = "lib/model_x86.so";
-    Infer* landing = new Infer(model_so);
+    std::string model_so = "lib/model.so";
+    std::string model_json = "lib/model.json";
+    std::string model_params = "lib/model.params";
+    Infer* landing = new Infer(model_so, model_json, model_params);
 
     // Initialize flight controller
     FC* fc = new FC(sensors, landing);

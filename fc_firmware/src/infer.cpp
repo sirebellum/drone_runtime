@@ -3,8 +3,10 @@
 #include <fstream>
 
 // Infer constructor
-Infer::Infer(std::string model_path) {
-    init(model_path);
+Infer::Infer(std::string model_path,
+             std::string model_json,
+             std::string model_params) {
+    init(model_path, model_json, model_params);
 }
 
 // Infer destructor
@@ -12,17 +14,31 @@ Infer::~Infer() {
 }
 
 // Initialize the inference
-void Infer::init(const std::string& model_path) {
-    // Load the module
-    mod_factory = tvm::runtime::Module::LoadFromFile(model_path);
+void Infer::init(const std::string& model_path,
+                 const std::string& model_json,
+                 const std::string& model_params) {
+    tvm::runtime::Module mod_syslib = tvm::runtime::Module::LoadFromFile(model_path);
 
-    // Get the graph runtime module
-    mod_ = mod_factory.GetFunction("default")(dev_);
+    std::ifstream json_in(model_json, std::ios::in);
+    std::string json_data((std::istreambuf_iterator<char>(json_in)), std::istreambuf_iterator<char>());
+    json_in.close();
 
-    // Get the functions
+    std::ifstream params_in(model_params, std::ios::binary);
+    std::string params_data((std::istreambuf_iterator<char>(params_in)), std::istreambuf_iterator<char>());
+    params_in.close();
+
+    TVMByteArray params_arr;
+    params_arr.data = params_data.c_str();
+    params_arr.size = params_data.length();
+
+    mod_ = (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data, mod_syslib, dev_);
+
     set_input_ = mod_.GetFunction("set_input");
     get_output_ = mod_.GetFunction("get_output");
+    load_params_ = mod_.GetFunction("load_params");
     run_ = mod_.GetFunction("run");
+
+    load_params_(params_arr);
 }
 
 // Run the inference
@@ -35,7 +51,7 @@ void Infer::run(const cv::Mat& img, float* out_data) {
     cv::Mat img_norm_t = img_norm.t();
     cv::Mat img_norm_t_flat = img_norm_t.reshape(1, img_norm_t.total());
     tvm::runtime::NDArray img_tvm = tvm::runtime::NDArray::Empty(
-        {1, 3, 224, 224}, {kDLFloat, 32, 1}, {kDLCPU, 0});
+        {1, 3, 256, 256}, {kDLFloat, 32, 1}, {kDLCPU, 0});
     memcpy(img_tvm.ToDLPack()->dl_tensor.data, img_norm_t_flat.data, get_array_size(img_tvm));
 
     set_input_("input", img_tvm);
