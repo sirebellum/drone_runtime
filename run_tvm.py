@@ -8,7 +8,7 @@ import argparse
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='TVM model generator')
-parser.add_argument('--model', type=str, default='model.pt', help='Model to use')
+parser.add_argument('--model', type=str, default='model', help='Model to use')
 parser.add_argument('--arch', type=str, default='x86', help='Output file name')
 
 args = parser.parse_args()
@@ -16,18 +16,18 @@ args = parser.parse_args()
 # Set the target
 if args.arch == 'x86':
     target = tvm.target.Target('llvm', host='llvm')
-    output = 'model_x86.so'
+    output = args.model + '_x86.so'
 elif args.arch == 'arm':
     target = 'llvm -mtriple=aarch64-linux-gnu'
     target = tvm.target.Target(target, host=target)
-    output = 'model_arm.so'
+    output = args.model + '_arm.so'
 elif args.arch == 'mac':
     target = 'llvm -mtriple=aarch64-apple-darwin'
     target = tvm.target.Target(target, host=target)
-    output = 'model_mac.so'
+    output = args.model + '_mac.so'
 
 # Load the model
-model = torch.load(args.model)
+model = torch.load(args.model+'.pt')
 model.eval()
 
 # Create a dummy input
@@ -46,9 +46,9 @@ with relay.build_config(opt_level=3):
 lib.export_library("fc_firmware/lib/" + output)
 
 # Save the parameters
-with open("fc_firmware/lib/model.params", "wb") as fo:
+with open("fc_firmware/lib/"+args.model+".params", "wb") as fo:
     fo.write(relay.save_param_dict(params))
 
 # Save the graph json
-with open("fc_firmware/lib/model.json", "w") as fo:
+with open("fc_firmware/lib/"+args.model+".json", "w") as fo:
     fo.write(graph)
