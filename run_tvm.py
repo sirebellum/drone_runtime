@@ -3,13 +3,14 @@ import tvm
 import torch
 from tvm import relay
 # from models import IMAGE_SIZE
-IMAGE_SIZE = 256
 import argparse
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='TVM model generator')
 parser.add_argument('--model', type=str, default='model', help='Model to use')
 parser.add_argument('--arch', type=str, default='x86', help='Output file name')
+parser.add_argument('--image_size', type=int, default=256, help='Image size')
+parser.add_argument('--channels', type=int, default=1, help='Number of channels')
 
 args = parser.parse_args()
 
@@ -31,7 +32,7 @@ model = torch.load(args.model+'.pt')
 model.eval()
 
 # Create a dummy input
-input_shape = (1, 1, IMAGE_SIZE, IMAGE_SIZE)
+input_shape = (1, args.channels, args.image_size, args.immage_size)
 
 # Create a Relay model
 input_name = 'input'
