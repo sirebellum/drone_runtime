@@ -32,7 +32,7 @@ model = torch.load(args.model+'.pt')
 model.eval()
 
 # Create a dummy input
-input_shape = (1, args.channels, args.image_size, args.immage_size)
+input_shape = (1, args.channels, args.image_size, args.image_size)
 
 # Create a Relay model
 input_name = 'input'
