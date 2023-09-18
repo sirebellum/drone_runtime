@@ -9,7 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description='TVM model generator')
 parser.add_argument('--model', type=str, default='model', help='Model to use')
 parser.add_argument('--arch', type=str, default='x86', help='Output file name')
-parser.add_argument('--input_size', type=int, default=[1,3,256,256], help='Image size')
+parser.add_argument('--input_size', type=list, default=[1,3,256,256], help='Image size')
 
 args = parser.parse_args()
 
