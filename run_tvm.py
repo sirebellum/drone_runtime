@@ -9,7 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description='TVM model generator')
 parser.add_argument('--model', type=str, default='model', help='Model to use')
 parser.add_argument('--arch', type=str, default='x86', help='Output file name')
-parser.add_argument('--input_size', type=list, default=[1,3,256,256], help='Image size')
+parser.add_argument('--input_size', type=str, default='[1,3,256,256]', help='Input size')
 
 args = parser.parse_args()
 
@@ -31,7 +31,7 @@ model = torch.load(args.model+'.pt')
 model.eval()
 
 # Create a dummy input
-input_shape = args.input_size
+input_shape = list(args.input_size)
 
 # Create a Relay model
 input_name = 'input'
