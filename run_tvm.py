@@ -31,7 +31,7 @@ model = torch.load(args.model+'.pt')
 model.eval()
 
 # Create a dummy input
-input_shape = list(args.input_size)
+input_shape = eval(args.input_size)
 
 # Create a Relay model
 input_name = 'input'
